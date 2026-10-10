@@ -1,6 +1,9 @@
 package weather
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Weather struct {
 	City        string
@@ -12,14 +15,16 @@ type Weather struct {
 }
 
 func (w *Weather) String() string {
-	text := fmt.Sprintf(
-		"Город: %s\n"+
-			"Описание: %s\n"+
-			"Температура: %f\n"+
-			"Ощущается как: %f\n"+
-			"Влажность: %d%%\n"+
-			"Скорость ветра: %f м/с\n",
-		w.City, w.Description, w.Temp, w.FeelsLike, w.Humidity, w.WindSpeed,
-	)
-	return text
+
+	var sb strings.Builder
+
+	sb.WriteString("Погода\n\n")
+	sb.WriteString(fmt.Sprintf("Город: %s\n", w.City))
+	sb.WriteString(fmt.Sprintf("Описание: %s\n", w.Description))
+	sb.WriteString(fmt.Sprintf("Температура: %.1f °C\n", w.Temp))
+	sb.WriteString(fmt.Sprintf("Ощущается как: %.1f °C\n", w.FeelsLike))
+	sb.WriteString(fmt.Sprintf("Влажность: %d%%\n", w.Humidity))
+	sb.WriteString(fmt.Sprintf("Скорость ветра: %.2f м/с\n", w.WindSpeed))
+
+	return sb.String()
 }

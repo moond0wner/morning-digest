@@ -10,7 +10,8 @@ import (
 	core_config "github.com/moond0wner/morning-digest/internal/core/config"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
 	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
-	start_transport "github.com/moond0wner/morning-digest/internal/features/start"
+	"github.com/moond0wner/morning-digest/internal/features/invest"
+	"github.com/moond0wner/morning-digest/internal/features/start"
 	"github.com/moond0wner/morning-digest/internal/features/weather"
 	"go.uber.org/zap"
 )
@@ -36,15 +37,20 @@ func main() {
 	logger.Debug("application bot")
 
 	logger.Debug("initializing feature", zap.String("feature", "start"))
-	startHandler := start_transport.NewHandler(logger)
+	startHandler := start.NewHandler(logger)
 
 	logger.Debug("initializing feature", zap.String("feature", "weather"))
 	weatherService := weather.NewService(config.OpenWeather)
 	weatherTransport := weather.NewHandler(logger, weatherService)
 
+	logger.Debug("initializing feature", zap.String("feature", "invest"))
+	investService := invest.NewService(ctx, logger)
+	investTransport := invest.NewHandler(logger, investService)
+
 	bot.Register(
 		startHandler.Handle(),
 		weatherTransport.Handle(),
+		investTransport.Handle(),
 	)
 	bot.Start(ctx)
 }
