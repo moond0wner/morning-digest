@@ -24,6 +24,7 @@ func NewHandler(log *core_logger.Logger, srvc *Service) *Handler {
 
 func (h *Handler) Weather(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
+
 	weather, err := h.service.Get(ctx, "Saratov")
 	if err != nil {
 		h.Log.Error("get weather", zap.Error(err))
