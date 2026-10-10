@@ -23,12 +23,12 @@ func NewService(ctx context.Context, logger *core_logger.Logger) *Service {
 }
 
 func (s *Service) GetPortfolio(ctx context.Context) (*Portfolio, error) {
-	resp, err := s.client.GetPortfolio(ctx)
+	response, err := s.client.GetPortfolio(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get portfolio: %w", err)
 	}
 
-	return convertToPortfolio(resp), nil
+	return convertToPortfolio(response), nil
 }
 
 func convertToPortfolio(resp *investgo.PortfolioResponse) *Portfolio {

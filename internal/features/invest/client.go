@@ -44,12 +44,12 @@ func newClient(ctx context.Context, logger *core_logger.Logger) (*client, error)
 }
 
 func (c *client) GetPortfolio(ctx context.Context) (*investgo.PortfolioResponse, error) {
-	resp, err := c.operationsService.GetPortfolio(
+	response, err := c.operationsService.GetPortfolio(
 		c.accountID,
 		investapi.PortfolioRequest_RUB,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("get portfolio: %w", err)
 	}
-	return resp, nil
+	return response, nil
 }
