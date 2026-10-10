@@ -9,21 +9,11 @@ import (
 
 	core_config "github.com/moond0wner/morning-digest/internal/core/config"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
+	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
+	start_transport "github.com/moond0wner/morning-digest/internal/features/start"
+	"github.com/moond0wner/morning-digest/internal/features/weather"
 	"go.uber.org/zap"
-
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
 )
-
-type Handler struct {
-	log *core_logger.Logger
-}
-
-func NewHandler(log *core_logger.Logger) *Handler {
-	return &Handler{
-		log: log,
-	}
-}
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -35,31 +25,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	handlers := NewHandler(logger)
-
 	config := core_config.NewConfigMust()
-
 	logger.Debug("application config")
 
-	b, err := bot.New(config.BotToken)
+	bot, err := core_telegram.NewBot(logger, config)
 	if err != nil {
-		logger.Error("failed to create bot", zap.Error(err))
+		logger.Error("create bot", zap.Error(err))
 		os.Exit(1)
 	}
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, handlers.Start)
-	logger.Debug("create bot, register handlers and start")
+	logger.Debug("application bot")
 
-	b.Start(ctx)
-}
+	logger.Debug("initializing feature", zap.String("feature", "start"))
+	startHandler := start_transport.NewHandler(logger)
 
-func (h *Handler) Start(ctx context.Context, b *bot.Bot, update *models.Update) {
-	text := "Привет, я твой бот-помощник. Пока что я ничего не умею, но все впереди!"
-	chatID := update.Message.Chat.ID
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatID,
-		Text:   text,
-	})
-	if err != nil {
-		h.log.Warn("failed to send message", zap.Any("user_id", chatID), zap.Error(err))
-	}
+	logger.Debug("initializing feature", zap.String("feature", "weather"))
+	weatherService := weather.NewService(config.OpenWeather)
+	weatherTransport := weather.NewHandler(logger, weatherService)
+
+	bot.Register(
+		startHandler.Handle(),
+		weatherTransport.Handle(),
+	)
+	bot.Start(ctx)
 }
