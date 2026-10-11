@@ -1,6 +1,7 @@
 package core_logger
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,11 +11,11 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// type loggerContextKey struct{}
+type loggerContextKey struct{}
 
-// var (
-// 	key = loggerContextKey{}
-// )
+var (
+	key = loggerContextKey{}
+)
 
 type Logger struct {
 	*zap.Logger
@@ -22,21 +23,21 @@ type Logger struct {
 	file *os.File
 }
 
-// func ToContext(ctx context.Context, log *Logger) context.Context {
-// 	return context.WithValue(
-// 		ctx,
-// 		key,
-// 		log,
-// 	)
-// }
+func ToContext(ctx context.Context, log *Logger) context.Context {
+	return context.WithValue(
+		ctx,
+		key,
+		log,
+	)
+}
 
-// func FromContext(ctx context.Context) *Logger {
-// 	log, ok := ctx.Value(key).(*Logger)
-// 	if !ok {
-// 		panic("no logger in context")
-// 	}
-// 	return log
-// }
+func FromContext(ctx context.Context) *Logger {
+	log, ok := ctx.Value(key).(*Logger)
+	if !ok {
+		panic("no logger in context")
+	}
+	return log
+}
 
 func NewLogger(config Config) (*Logger, error) {
 	zapLvl := zap.NewAtomicLevel()

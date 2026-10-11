@@ -1,7 +1,7 @@
 package invest
 
 import (
-	"fmt"
+	"errors"
 	"os"
 )
 
@@ -37,11 +37,11 @@ type config struct {
 func newConfig() (config, error) {
 	token := os.Getenv("INVEST_TOKEN")
 	if token == "" {
-		return config{}, fmt.Errorf("empty INVEST_TOKEN")
+		return config{}, errors.New("empty INVEST_TOKEN")
 	}
 	accountId := os.Getenv("INVEST_ACCOUNT_ID")
 	if accountId == "" {
-		return config{}, fmt.Errorf("empty INVEST_ACCOUNT_ID")
+		return config{}, errors.New("empty INVEST_ACCOUNT_ID")
 	}
 
 	return config{
@@ -54,12 +54,4 @@ func newConfig() (config, error) {
 		MaxRetries:                    3,
 		InsecureSkipVerify:            true,
 	}, nil
-}
-
-func newConfigMust() config {
-	config, err := newConfig()
-	if err != nil {
-		panic(fmt.Errorf("get invest config: %w", err))
-	}
-	return config
 }

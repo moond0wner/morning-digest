@@ -11,13 +11,15 @@ import (
 
 type client struct {
 	api               *investgo.Client
-	usersService      *investgo.UsersServiceClient
 	operationsService *investgo.OperationsServiceClient
 	accountID         string
 }
 
 func newClient(ctx context.Context, logger *core_logger.Logger) (*client, error) {
-	config := newConfigMust()
+	config, err := newConfig()
+	if err != nil {
+		return nil, fmt.Errorf("load invest config: %w", err)
+	}
 
 	investgoConfig := investgo.Config{
 		EndPoint:                      config.EndPoint,
@@ -37,13 +39,12 @@ func newClient(ctx context.Context, logger *core_logger.Logger) (*client, error)
 
 	return &client{
 		api:               api,
-		usersService:      api.NewUsersServiceClient(),
 		operationsService: api.NewOperationsServiceClient(),
 		accountID:         config.AccountId,
 	}, nil
 }
 
-func (c *client) GetPortfolio(ctx context.Context) (*investgo.PortfolioResponse, error) {
+func (c *client) GetPortfolio() (*investgo.PortfolioResponse, error) {
 	response, err := c.operationsService.GetPortfolio(
 		c.accountID,
 		investapi.PortfolioRequest_RUB,
@@ -52,4 +53,11 @@ func (c *client) GetPortfolio(ctx context.Context) (*investgo.PortfolioResponse,
 		return nil, fmt.Errorf("get portfolio: %w", err)
 	}
 	return response, nil
+}
+
+func (c *client) Close() error {
+	if c.api != nil {
+		return c.api.Conn.Close()
+	}
+	return nil
 }

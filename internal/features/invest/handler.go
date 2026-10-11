@@ -25,7 +25,7 @@ func NewHandler(log *core_logger.Logger, srvc *Service) *Handler {
 func (h *Handler) Invest(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
 
-	portfolio, err := h.service.GetPortfolio(ctx)
+	portfolio, err := h.service.GetPortfolio()
 	if err != nil {
 		h.Log.Error("get invest", zap.Error(err))
 		_, err := b.SendMessage(ctx, &bot.SendMessageParams{

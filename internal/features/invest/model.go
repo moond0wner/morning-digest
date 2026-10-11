@@ -2,7 +2,6 @@ package invest
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 )
 
@@ -21,20 +20,22 @@ type Position struct {
 }
 
 func (p *Portfolio) String() string {
-	sort.Slice(p.Positions, func(i, j int) bool {
-		return p.Positions[i].CurrentPrice*p.Positions[i].Quantity >
-			p.Positions[j].CurrentPrice*p.Positions[j].Quantity
-	})
 	var sb strings.Builder
 	sb.WriteString("Портфель\n\n")
-	sb.WriteString(fmt.Sprintf("Стоимость: %.0f RUB\n", p.TotalAmount))
-	sb.WriteString(fmt.Sprintf("Доходность: %.0f RUB\n", p.ExpectedYield))
-	sb.WriteString(fmt.Sprintf("За день: %.0f RUB\n\n", p.DailyYield))
-	for _, position := range p.Positions {
-		sb.WriteString(fmt.Sprintf(
-			"• %s — %.0f шт, %.0f ₽, %+.0f ₽\n",
-			position.Ticker, position.Quantity, position.CurrentPrice, position.ExpectedYield,
-		))
+	fmt.Fprintf(&sb, "Стоимость: %.0f ₽\n", p.TotalAmount)
+	fmt.Fprintf(&sb, "Доходность: %+.0f ₽\n", p.ExpectedYield)
+	fmt.Fprintf(&sb, "За день: %+.0f ₽\n\n", p.DailyYield)
+
+	if len(p.Positions) == 0 {
+		sb.WriteString("Нет открытых позиций\n")
+	}
+
+	for _, pos := range p.Positions {
+		fmt.Fprintf(
+			&sb,
+			"• %s — %.0f шт, %.2f ₽, %+.0f ₽\n",
+			pos.Ticker, pos.Quantity, pos.CurrentPrice, pos.ExpectedYield,
+		)
 	}
 	return sb.String()
 }
