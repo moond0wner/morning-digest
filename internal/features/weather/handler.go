@@ -50,11 +50,13 @@ func (h *Handler) Weather(ctx context.Context, b *bot.Bot, update *models.Update
 
 }
 
-func (h *Handler) Handle() core_telegram.Handle {
-	return core_telegram.Handle{
-		HandleType: bot.HandlerTypeMessageText,
-		Pattern:    "weather",
-		MatchType:  bot.MatchTypeCommand,
-		Function:   h.Weather,
+func (h *Handler) Handle() []core_telegram.Handle {
+	return []core_telegram.Handle{
+		{
+			HandleType: bot.HandlerTypeMessageText,
+			Pattern:    "weather",
+			MatchType:  bot.MatchTypeCommand,
+			Function:   h.Weather,
+		},
 	}
 }

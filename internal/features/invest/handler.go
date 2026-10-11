@@ -25,7 +25,7 @@ func NewHandler(log *core_logger.Logger, srvc *Service) *Handler {
 func (h *Handler) Invest(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
 
-	portfolio, err := h.service.GetPortfolio()
+	portfolio, err := h.service.GetPortfolio(ctx)
 	if err != nil {
 		h.Log.Error("get invest", zap.Error(err))
 		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
@@ -48,11 +48,13 @@ func (h *Handler) Invest(ctx context.Context, b *bot.Bot, update *models.Update)
 	}
 }
 
-func (h *Handler) Handle() core_telegram.Handle {
-	return core_telegram.Handle{
-		HandleType: bot.HandlerTypeMessageText,
-		Pattern:    "invest",
-		MatchType:  bot.MatchTypeCommand,
-		Function:   h.Invest,
+func (h *Handler) Handle() []core_telegram.Handle {
+	return []core_telegram.Handle{
+		{
+			HandleType: bot.HandlerTypeMessageText,
+			Pattern:    "invest",
+			MatchType:  bot.MatchTypeCommand,
+			Function:   h.Invest,
+		},
 	}
 }

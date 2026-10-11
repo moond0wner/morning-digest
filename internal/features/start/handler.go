@@ -34,11 +34,13 @@ func (h *Handler) Start(ctx context.Context, b *bot.Bot, update *models.Update) 
 	}
 }
 
-func (h *Handler) Handle() core_telegram.Handle {
-	return core_telegram.Handle{
-		HandleType: bot.HandlerTypeMessageText,
-		Pattern:    "start",
-		MatchType:  bot.MatchTypeCommand,
-		Function:   h.Start,
+func (h *Handler) Handle() []core_telegram.Handle {
+	return []core_telegram.Handle{
+		{
+			HandleType: bot.HandlerTypeMessageText,
+			Pattern:    "start",
+			MatchType:  bot.MatchTypeCommand,
+			Function:   h.Start,
+		},
 	}
 }

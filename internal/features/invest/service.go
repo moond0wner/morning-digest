@@ -29,7 +29,12 @@ func (s *Service) Close() error {
 	return s.client.Close()
 }
 
-func (s *Service) GetPortfolio() (*Portfolio, error) {
+func (s *Service) GetPortfolio(ctx context.Context) (*Portfolio, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
 	response, err := s.client.GetPortfolio()
 	if err != nil {
 		return nil, fmt.Errorf("get portfolio: %w", err)

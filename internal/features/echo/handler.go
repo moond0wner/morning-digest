@@ -1,4 +1,4 @@
-package default_handler
+package echo
 
 import (
 	"context"
@@ -14,13 +14,13 @@ type Handler struct {
 	*core_telegram.BaseHandler
 }
 
-func NewHandler(log *core_logger.Logger) *Handler {
+func NewHandler(logger *core_logger.Logger) *Handler {
 	return &Handler{
-		BaseHandler: core_telegram.NewBaseHandler(log),
+		BaseHandler: core_telegram.NewBaseHandler(logger),
 	}
 }
 
-func (h *Handler) Default(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *Handler) Echo(ctx context.Context, b *bot.Bot, update *models.Update) {
 	if update.Message == nil {
 		return
 	}
@@ -38,11 +38,13 @@ func (h *Handler) Default(ctx context.Context, b *bot.Bot, update *models.Update
 	}
 }
 
-func (h *Handler) Handle() core_telegram.Handle {
-	return core_telegram.Handle{
-		HandleType: bot.HandlerTypeMessageText,
-		Pattern:    "",
-		MatchType:  bot.MatchTypePrefix,
-		Function:   h.Default,
+func (h *Handler) Handle() []core_telegram.Handle {
+	return []core_telegram.Handle{
+		{
+			HandleType: bot.HandlerTypeMessageText,
+			Pattern:    "",
+			MatchType:  bot.MatchTypePrefix,
+			Function:   h.Echo,
+		},
 	}
 }
