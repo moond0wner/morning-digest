@@ -12,6 +12,7 @@ import (
 	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
 	"github.com/moond0wner/morning-digest/internal/features/echo"
 	"github.com/moond0wner/morning-digest/internal/features/invest"
+	"github.com/moond0wner/morning-digest/internal/features/news/habr"
 	"github.com/moond0wner/morning-digest/internal/features/start"
 	"github.com/moond0wner/morning-digest/internal/features/weather"
 	"go.uber.org/zap"
@@ -52,10 +53,13 @@ func main() {
 		}
 	}()
 
+	habrService := habr.NewService()
+
 	features := []core_feature.Feature{
 		start.NewFeature(logger),
 		weather.NewFeature(logger, weatherService),
 		invest.NewFeature(logger, investService),
+		habr.NewFeature(logger, habrService),
 		echo.NewFeature(logger), // этот хендлер должен быть всегда последним в регистрации
 	}
 
