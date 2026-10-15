@@ -11,7 +11,7 @@ import (
 
 type Feature struct {
 	core_feature.BaseFeature
-	handler *Handler
+	handler *handler
 }
 
 func NewFeature(logger *core_logger.Logger) *Feature {
@@ -21,15 +21,15 @@ func NewFeature(logger *core_logger.Logger) *Feature {
 }
 
 func (f *Feature) Init(ctx context.Context) error {
-	service, err := NewService(ctx, f.Log)
+	service, err := newService(ctx, f.Log)
 	if err != nil {
 		return err
 	}
 
-	f.handler = NewHandler(f.Log, service)
+	f.handler = newHandler(f.Log, service)
 
 	return core_feature.WithTimeout(ctx, 30*time.Second, func(ctx context.Context) error {
-		_, err := f.handler.service.GetPortfolio(ctx)
+		_, err := f.handler.service.getPortfolio()
 		return err
 	})
 }
@@ -38,12 +38,12 @@ func (f *Feature) Handle() []core_telegram.Handle {
 	if f.handler == nil {
 		return nil
 	}
-	return f.handler.Handle()
+	return f.handler.handle()
 }
 
 func (f *Feature) Close(ctx context.Context) error {
 	if f.handler == nil || f.handler.service == nil {
 		return nil
 	}
-	return f.handler.service.Close()
+	return f.handler.service.close()
 }

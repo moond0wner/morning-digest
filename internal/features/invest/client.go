@@ -49,7 +49,7 @@ func newClient(ctx context.Context, logger *core_logger.Logger) (*client, error)
 	}, nil
 }
 
-func (c *client) GetPortfolio() (*investgo.PortfolioResponse, error) {
+func (c *client) getPortfolio() (*investgo.PortfolioResponse, error) {
 	response, err := c.operationsService.GetPortfolio(
 		c.accountID,
 		investapi.PortfolioRequest_RUB,
@@ -64,7 +64,7 @@ func (c *client) GetPortfolio() (*investgo.PortfolioResponse, error) {
 	return response, nil
 }
 
-func (c *client) Close() error {
+func (c *client) close() error {
 	if c.api != nil {
 		return c.api.Conn.Close()
 	}

@@ -7,13 +7,13 @@ import (
 
 type Feature struct {
 	core_feature.BaseFeature
-	handler *Handler
+	handler *handler
 }
 
 func NewFeature(logger *core_logger.Logger) *Feature {
-	h := NewHandler(logger)
+	h := newHandler(logger)
 	return &Feature{
-		BaseFeature: core_feature.NewBaseFeature("start", logger, h.Handle()),
+		BaseFeature: core_feature.NewBaseFeature("start", logger, h.handle()),
 		handler:     h,
 	}
 }

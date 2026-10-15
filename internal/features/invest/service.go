@@ -11,28 +11,28 @@ import (
 
 const rubTicker = "RUB000UTSTOM"
 
-type Service struct {
+type service struct {
 	client *client
 	log    *core_logger.Logger
 }
 
-func NewService(ctx context.Context, logger *core_logger.Logger) (*Service, error) {
+func newService(ctx context.Context, logger *core_logger.Logger) (*service, error) {
 	clnt, err := newClient(ctx, logger)
 	if err != nil {
 		return nil, fmt.Errorf("create invest service: %w", err)
 	}
-	return &Service{
+	return &service{
 		client: clnt,
 		log:    logger,
 	}, nil
 }
 
-func (s *Service) Close() error {
-	return s.client.Close()
+func (s *service) close() error {
+	return s.client.close()
 }
 
-func (s *Service) GetPortfolio(ctx context.Context) (*Portfolio, error) {
-	response, err := s.client.GetPortfolio()
+func (s *service) getPortfolio() (*Portfolio, error) {
+	response, err := s.client.getPortfolio()
 	if err != nil {
 		return nil, err
 	}

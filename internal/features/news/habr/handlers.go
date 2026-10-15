@@ -9,11 +9,11 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
-func (h *Handler) handleChoiceSource(
+func (h *handler) handleChoiceSource(
 	ctx context.Context,
 	b *bot.Bot,
 	update *models.Update,
-	state *NewsDialogState,
+	state *newsDialogState,
 	chatID int64,
 	msgID int,
 ) {
@@ -30,11 +30,11 @@ func (h *Handler) handleChoiceSource(
 	}
 }
 
-func (h *Handler) handleChoiceHub(
+func (h *handler) handleChoiceHub(
 	ctx context.Context,
 	b *bot.Bot,
 	update *models.Update,
-	state *NewsDialogState,
+	state *newsDialogState,
 	chatID int64,
 	msgID int,
 ) {
@@ -45,11 +45,11 @@ func (h *Handler) handleChoiceHub(
 	h.editMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
 }
 
-func (h *Handler) handleChoiceLimit(
+func (h *handler) handleChoiceLimit(
 	ctx context.Context,
 	b *bot.Bot,
 	update *models.Update,
-	state *NewsDialogState,
+	state *newsDialogState,
 	chatID int64,
 	userID int64,
 ) {

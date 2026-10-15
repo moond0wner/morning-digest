@@ -10,22 +10,22 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+type handler struct {
 	*core_telegram.BaseHandler
-	service *Service
+	service *service
 }
 
-func NewHandler(log *core_logger.Logger, srvc *Service) *Handler {
-	return &Handler{
+func newHandler(log *core_logger.Logger, srvc *service) *handler {
+	return &handler{
 		BaseHandler: core_telegram.NewBaseHandler(log),
 		service:     srvc,
 	}
 }
 
-func (h *Handler) Invest(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *handler) invest(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
 
-	portfolio, err := h.service.GetPortfolio(ctx)
+	portfolio, err := h.service.getPortfolio()
 	if err != nil {
 		h.ReplyError(ctx, b, chatID, "Не удалось собрать информацию о Вашем счете", err)
 		return
@@ -41,13 +41,13 @@ func (h *Handler) Invest(ctx context.Context, b *bot.Bot, update *models.Update)
 	}
 }
 
-func (h *Handler) Handle() []core_telegram.Handle {
+func (h *handler) handle() []core_telegram.Handle {
 	return []core_telegram.Handle{
 		{
 			HandleType: bot.HandlerTypeMessageText,
 			Pattern:    "invest",
 			MatchType:  bot.MatchTypeCommand,
-			Function:   h.Invest,
+			Function:   h.invest,
 		},
 	}
 }
