@@ -16,6 +16,7 @@ import (
 	"github.com/moond0wner/morning-digest/internal/features/invest"
 	"github.com/moond0wner/morning-digest/internal/features/news/habr"
 	"github.com/moond0wner/morning-digest/internal/features/start"
+	todoreminder "github.com/moond0wner/morning-digest/internal/features/todo_reminder"
 	"github.com/moond0wner/morning-digest/internal/features/weather"
 	"go.uber.org/zap"
 )
@@ -42,6 +43,7 @@ func main() {
 		weather.NewFeature(logger),
 		invest.NewFeature(logger),
 		habr.NewFeature(logger),
+		todoreminder.NewFeature(logger),
 		echo.NewFeature(logger), // этот хендлер должен быть всегда последним в регистрации
 	}
 

@@ -21,12 +21,12 @@ func (h *handler) handleChoiceSource(
 	switch data {
 	case cbSourceBase:
 		state.SourceType = "base"
-		state.Step = ChoiceLimit
-		h.editMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
+		state.Step = choiceLimit
+		h.EditMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
 	case cbSourceHub:
 		state.SourceType = "hub"
-		state.Step = ChoiceHub
-		h.editMessage(ctx, b, chatID, msgID, "Выберите хаб", hubKeyboard())
+		state.Step = choiceHub
+		h.EditMessage(ctx, b, chatID, msgID, "Выберите хаб", hubKeyboard())
 	}
 }
 
@@ -41,8 +41,8 @@ func (h *handler) handleChoiceHub(
 	data := update.CallbackQuery.Data
 	hub := strings.TrimPrefix(data, cbHubPrefix)
 	state.Hub = hub
-	state.Step = ChoiceLimit
-	h.editMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
+	state.Step = choiceLimit
+	h.EditMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
 }
 
 func (h *handler) handleChoiceLimit(

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
 	"go.uber.org/zap"
 )
 
@@ -84,29 +83,6 @@ func (h *handler) sendArticles(
 		h.Log.Warn("failed to send message",
 			zap.Int64("user_id", userID),
 			zap.Int64("chat_id", chatID),
-			zap.Error(err),
-		)
-	}
-}
-
-func (h *handler) editMessage(
-	ctx context.Context,
-	b *bot.Bot,
-	chatID int64,
-	msgID int,
-	text string,
-	kb *models.InlineKeyboardMarkup,
-) {
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
-		Text:        text,
-		ReplyMarkup: kb,
-	})
-	if err != nil {
-		h.Log.Warn("failed to edit message",
-			zap.Int64("chat_id", chatID),
-			zap.Int("msg_id", msgID),
 			zap.Error(err),
 		)
 	}

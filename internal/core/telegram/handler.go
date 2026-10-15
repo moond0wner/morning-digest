@@ -8,8 +8,8 @@ type BaseHandler struct {
 	Log *core_logger.Logger
 }
 
-func NewBaseHandler(log *core_logger.Logger) *BaseHandler {
+func NewBaseHandler(logger *core_logger.Logger) *BaseHandler {
 	return &BaseHandler{
-		Log: log,
+		Log: logger,
 	}
 }

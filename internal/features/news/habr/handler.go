@@ -31,11 +31,9 @@ func (h *handler) startDialog(ctx context.Context, b *bot.Bot, update *models.Up
 	userID := update.Message.From.ID
 	chatID := update.Message.Chat.ID
 
-	h.mtx.Lock()
-	h.states[userID] = &newsDialogState{
-		Step: ChoiceSource,
-	}
-	h.mtx.Unlock()
+	h.setState(userID, &newsDialogState{
+		Step: choiceSource,
+	})
 
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
@@ -43,7 +41,12 @@ func (h *handler) startDialog(ctx context.Context, b *bot.Bot, update *models.Up
 		ReplyMarkup: sourceKeyboard(),
 	})
 	if err != nil {
-		h.Log.Warn("failed to send message", zap.Int64("user_id", chatID), zap.Error(err))
+		h.Log.Warn(
+			"failed to send message",
+			zap.Int64("chat_id", chatID),
+			zap.Int64("user_id", userID),
+			zap.Error(err),
+		)
 	}
 }
 
@@ -70,11 +73,11 @@ func (h *handler) handleCallback(ctx context.Context, b *bot.Bot, update *models
 	}
 
 	switch state.Step {
-	case ChoiceSource:
+	case choiceSource:
 		h.handleChoiceSource(ctx, b, update, state, chatID, msgID)
-	case ChoiceHub:
+	case choiceHub:
 		h.handleChoiceHub(ctx, b, update, state, chatID, msgID)
-	case ChoiceLimit:
+	case choiceLimit:
 		h.handleChoiceLimit(ctx, b, update, state, chatID, userID)
 	}
 }
