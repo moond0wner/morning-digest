@@ -6,6 +6,7 @@ import (
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
+	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
 )
 
 type Feature struct {
@@ -13,17 +14,36 @@ type Feature struct {
 	handler *Handler
 }
 
-func NewFeature(logger *core_logger.Logger, srvc *Service) *Feature {
-	h := NewHandler(logger, srvc)
+func NewFeature(logger *core_logger.Logger) *Feature {
 	return &Feature{
-		BaseFeature: core_feature.NewBaseFeature("invest", h.Handle()),
-		handler:     h,
+		BaseFeature: core_feature.NewBaseFeature("invest", logger, nil),
 	}
 }
 
 func (f *Feature) Init(ctx context.Context) error {
+	service, err := NewService(ctx, f.Log)
+	if err != nil {
+		return err
+	}
+
+	f.handler = NewHandler(f.Log, service)
+
 	return core_feature.WithTimeout(ctx, 30*time.Second, func(ctx context.Context) error {
 		_, err := f.handler.service.GetPortfolio(ctx)
 		return err
 	})
+}
+
+func (f *Feature) Handle() []core_telegram.Handle {
+	if f.handler == nil {
+		return nil
+	}
+	return f.handler.Handle()
+}
+
+func (f *Feature) Close(ctx context.Context) error {
+	if f.handler == nil || f.handler.service == nil {
+		return nil
+	}
+	return f.handler.service.Close()
 }

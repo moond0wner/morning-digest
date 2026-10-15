@@ -37,31 +37,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	weatherService, err := weather.NewService(logger)
-	if err != nil {
-		logger.Error("failed to init weather service", zap.Error(err))
-		os.Exit(1)
-	}
-
-	investService, err := invest.NewService(ctx, logger)
-	if err != nil {
-		logger.Error("failed to init invest service", zap.Error(err))
-		os.Exit(1)
-	}
-
-	defer func() {
-		if err := investService.Close(); err != nil {
-			logger.Warn("failed to close invest service", zap.Error(err))
-		}
-	}()
-
-	habrService := habr.NewService(logger)
-
 	features := []core_feature.Feature{
 		start.NewFeature(logger),
-		weather.NewFeature(logger, weatherService),
-		invest.NewFeature(logger, investService),
-		habr.NewFeature(logger, habrService),
+		weather.NewFeature(logger),
+		invest.NewFeature(logger),
+		habr.NewFeature(logger),
 		echo.NewFeature(logger), // этот хендлер должен быть всегда последним в регистрации
 	}
 
@@ -80,6 +60,15 @@ func main() {
 		bot.Register(f.Handle()...)
 		logger.Debug("feature registered", zap.String("feature", f.Name()))
 	}
+
+	defer func() {
+		for i := len(features) - 1; i >= 0; i-- {
+			if err := features[i].Close(ctx); err != nil {
+				logger.Warn("feature close", zap.String("feature", features[i].Name()), zap.Error(err))
+			}
+			logger.Debug("feature is closed", zap.String("feature", features[i].Name()))
+		}
+	}()
 
 	bot.Start(ctx)
 	logger.Debug("bot is stopped")
