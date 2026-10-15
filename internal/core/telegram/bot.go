@@ -4,19 +4,21 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-telegram/bot"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
+	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 	core_telegram_middleware "github.com/moond0wner/morning-digest/internal/core/telegram/middleware"
 	"go.uber.org/zap"
 )
 
 type Bot struct {
-	bot    *bot.Bot
-	logger *core_logger.Logger
+	bot *bot.Bot
+	log *core_logger.Logger
 }
 
-func NewBot(logger *core_logger.Logger) (*Bot, error) {
+func NewBot(ctx context.Context, logger *core_logger.Logger) (*Bot, error) {
 	config, err := newConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load bot config: %w", err)
@@ -34,21 +36,25 @@ func NewBot(logger *core_logger.Logger) (*Bot, error) {
 		bot.WithErrorsHandler(safeErrors),
 		bot.WithWorkers(10),
 	}
-
-	b, err := bot.New(config.botToken, opts...)
+	var b *bot.Bot
+	err = core_retry.Do(ctx, 3, 1*time.Second, logger, func(ctx context.Context) error {
+		var err error
+		b, err = bot.New(config.botToken, opts...)
+		return err
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bot: %w", err)
 	}
 
 	return &Bot{
-		bot:    b,
-		logger: logger,
+		bot: b,
+		log: logger,
 	}, nil
 
 }
 
 func (b *Bot) Start(ctx context.Context) {
-	b.logger.Debug("Starting bot")
+	b.log.Debug("Starting bot")
 	b.bot.Start(ctx)
 }
 
@@ -66,7 +72,7 @@ func (b *Bot) Register(handles ...Handle) {
 			handler,
 			core_telegram_middleware.TagHandler(handle.Pattern),
 			core_telegram_middleware.RequestID(),
-			core_telegram_middleware.Logger(b.logger),
+			core_telegram_middleware.Logger(b.log),
 			core_telegram_middleware.Trace(),
 			core_telegram_middleware.Panic(),
 		)

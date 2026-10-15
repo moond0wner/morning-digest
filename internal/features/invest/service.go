@@ -13,6 +13,7 @@ const rubTicker = "RUB000UTSTOM"
 
 type Service struct {
 	client *client
+	log    *core_logger.Logger
 }
 
 func NewService(ctx context.Context, logger *core_logger.Logger) (*Service, error) {
@@ -22,6 +23,7 @@ func NewService(ctx context.Context, logger *core_logger.Logger) (*Service, erro
 	}
 	return &Service{
 		client: clnt,
+		log:    logger,
 	}, nil
 }
 
@@ -30,14 +32,9 @@ func (s *Service) Close() error {
 }
 
 func (s *Service) GetPortfolio(ctx context.Context) (*Portfolio, error) {
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-	}
 	response, err := s.client.GetPortfolio()
 	if err != nil {
-		return nil, fmt.Errorf("get portfolio: %w", err)
+		return nil, err
 	}
 
 	return convertToPortfolio(response), nil

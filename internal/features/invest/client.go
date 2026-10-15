@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
 	"opensource.tbank.ru/invest/invest-go/investgo"
 	investapi "opensource.tbank.ru/invest/invest-go/proto"
@@ -34,7 +35,11 @@ func newClient(ctx context.Context, logger *core_logger.Logger) (*client, error)
 
 	api, err := investgo.NewClient(ctx, investgoConfig, logger.Sugar())
 	if err != nil {
-		return nil, fmt.Errorf("create invest client: %w", err)
+		return nil, core_errors.Wrap(
+			core_errors.ErrExternalAPI,
+			err,
+			"create invest client",
+		)
 	}
 
 	return &client{
@@ -50,7 +55,11 @@ func (c *client) GetPortfolio() (*investgo.PortfolioResponse, error) {
 		investapi.PortfolioRequest_RUB,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("get portfolio: %w", err)
+		return nil, core_errors.Wrap(
+			core_errors.ErrExternalAPI,
+			err,
+			"get portfolio",
+		)
 	}
 	return response, nil
 }

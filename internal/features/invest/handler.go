@@ -27,14 +27,7 @@ func (h *Handler) Invest(ctx context.Context, b *bot.Bot, update *models.Update)
 
 	portfolio, err := h.service.GetPortfolio(ctx)
 	if err != nil {
-		h.Log.Error("get invest", zap.Error(err))
-		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatID,
-			Text:   "Не удалось собрать информацию о Вашем счете",
-		})
-		if err != nil {
-			h.Log.Warn("failed to send message", zap.Int64("user_id", chatID), zap.Error(err))
-		}
+		h.ReplyError(ctx, b, chatID, "Не удалось собрать информацию о Вашем счете", err)
 		return
 	}
 

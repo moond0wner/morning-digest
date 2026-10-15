@@ -22,7 +22,7 @@ func NewFeature(logger *core_logger.Logger, srvc *Service) *Feature {
 }
 
 func (f *Feature) Init(ctx context.Context) error {
-	return core_feature.WithTimeout(ctx, 5*time.Second, func(ctx context.Context) error {
+	return core_feature.WithTimeout(ctx, 30*time.Second, func(ctx context.Context) error {
 		_, err := f.handler.service.Get(ctx, "Moscow")
 		return err
 	})

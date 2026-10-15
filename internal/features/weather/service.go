@@ -4,36 +4,63 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
+
+	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
+	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
+	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 )
 
 type Service struct {
 	client *client
+	log    *core_logger.Logger
 }
 
-func NewService() (*Service, error) {
+func NewService(logger *core_logger.Logger) (*Service, error) {
 	config, err := newConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to load weather config: %w", err)
+		return nil, fmt.Errorf("load weather config: %w", err)
 	}
 
 	return &Service{
 		client: newClient(config.apiKey),
+		log:    logger,
 	}, nil
 }
 
 func (s *Service) Get(ctx context.Context, city string) (Weather, error) {
-	lat, lon, err := s.client.getCoordinates(ctx, city)
-	if err != nil {
-		return Weather{}, fmt.Errorf("get coordinates for %s: %w", city, err)
-	}
+	var weather Weather
+	err := core_retry.Do(ctx, 3, 1*time.Second, s.log, func(ctx context.Context) error {
+		lat, lon, err := s.client.getCoordinates(ctx, city)
+		if err != nil {
+			return err
+		}
 
-	response, err := s.client.getWeather(ctx, lat, lon)
+		response, err := s.client.getWeather(ctx, lat, lon)
+		if err != nil {
+			return err
+		}
+
+		weather, err = convertToWeather(response)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return Weather{}, fmt.Errorf("get weather for %s: %w", city, err)
 	}
 
+	return weather, nil
+
+}
+
+func convertToWeather(response *weatherResponse) (Weather, error) {
 	if len(response.Weather) == 0 {
-		return Weather{}, fmt.Errorf("weather response has no entries for city %q", city)
+		return Weather{}, core_errors.New(
+			core_errors.ErrNotFound,
+			"weather response has no entries city",
+		)
 	}
 	descriptions := make([]string, len(response.Weather))
 	for i, w := range response.Weather {
@@ -51,5 +78,4 @@ func (s *Service) Get(ctx context.Context, city string) (Weather, error) {
 	}
 
 	return weather, nil
-
 }

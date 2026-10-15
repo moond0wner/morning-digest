@@ -23,8 +23,8 @@ func (p *Portfolio) String() string {
 	var sb strings.Builder
 	sb.WriteString("Портфель\n\n")
 	fmt.Fprintf(&sb, "Стоимость: %.0f ₽\n", p.TotalAmount)
-	fmt.Fprintf(&sb, "Доходность: %+.0f ₽\n", p.ExpectedYield)
-	fmt.Fprintf(&sb, "За день: %+.0f ₽\n\n", p.DailyYield)
+	fmt.Fprintf(&sb, "Доходность: %+.3f ₽\n", p.ExpectedYield)
+	fmt.Fprintf(&sb, "За день: %+.2f ₽\n\n", p.DailyYield)
 
 	if len(p.Positions) == 0 {
 		sb.WriteString("Нет открытых позиций\n")

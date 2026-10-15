@@ -1,8 +1,9 @@
 package weather
 
 import (
-	"errors"
 	"os"
+
+	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
 )
 
 type config struct {
@@ -12,7 +13,7 @@ type config struct {
 func newConfig() (config, error) {
 	apiKey := os.Getenv("OPEN_WEATHER")
 	if apiKey == "" {
-		return config{}, errors.New("empty OPEN_WEATHER")
+		return config{}, core_errors.New(core_errors.ErrInternal, "empty OPEN_WEATHER")
 	}
 	return config{apiKey: apiKey}, nil
 }
