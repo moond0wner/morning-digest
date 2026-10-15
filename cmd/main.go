@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
+	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
 	"github.com/moond0wner/morning-digest/internal/features/echo"
 	"github.com/moond0wner/morning-digest/internal/features/invest"
@@ -29,13 +31,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	bot, err := core_telegram.NewBot(logger)
+	bot, err := core_telegram.NewBot(ctx, logger)
 	if err != nil {
 		logger.Error("create bot", zap.Error(err))
 		os.Exit(1)
 	}
 
-	weatherService, err := weather.NewService()
+	weatherService, err := weather.NewService(logger)
 	if err != nil {
 		logger.Error("failed to init weather service", zap.Error(err))
 		os.Exit(1)
@@ -53,7 +55,7 @@ func main() {
 		}
 	}()
 
-	habrService := habr.NewService()
+	habrService := habr.NewService(logger)
 
 	features := []core_feature.Feature{
 		start.NewFeature(logger),
@@ -66,11 +68,14 @@ func main() {
 	for _, f := range features {
 		logger.Debug("initializing feature", zap.String("feature", f.Name()))
 		if err := f.Init(ctx); err != nil {
-			logger.Warn("feature disabled",
-				zap.String("feature", f.Name()),
-				zap.Error(err),
-			)
-			continue
+			attempts := 3 // попытки
+			if err := core_retry.Do(ctx, attempts, 1*time.Second, logger, f.Init); err != nil {
+				logger.Warn("feature disabled",
+					zap.String("feature", f.Name()),
+					zap.Error(err),
+				)
+				continue
+			}
 		}
 		bot.Register(f.Handle()...)
 		logger.Debug("feature registered", zap.String("feature", f.Name()))

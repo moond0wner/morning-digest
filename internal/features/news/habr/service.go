@@ -5,17 +5,20 @@ import (
 	"fmt"
 	"time"
 
+	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
+	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 )
 
 type Service struct {
 	client *client
-	logger *core_logger.Logger
+	log    *core_logger.Logger
 }
 
-func NewService() *Service {
+func NewService(logger *core_logger.Logger) *Service {
 	return &Service{
 		client: newClient(),
+		log:    logger,
 	}
 }
 
@@ -25,18 +28,9 @@ const (
 )
 
 func (s *Service) BaseParse(ctx context.Context, limit int) ([]Article, error) {
-	items, err := s.client.parse(ctx, baseRSSUrl, limit)
+	articles, err := s.parseFromUrl(ctx, baseRSSUrl, limit)
 	if err != nil {
-		return nil, fmt.Errorf("base parse: %w", err)
-	}
-
-	articles := make([]Article, 0, len(items))
-	for _, item := range items {
-		article, err := itemToArticle(item)
-		if err != nil {
-			return nil, fmt.Errorf("failed turn item into article: %w", err)
-		}
-		articles = append(articles, article)
+		return nil, err
 	}
 
 	return articles, nil
@@ -44,20 +38,46 @@ func (s *Service) BaseParse(ctx context.Context, limit int) ([]Article, error) {
 
 func (s *Service) HubParse(ctx context.Context, hub string, limit int) ([]Article, error) {
 	hubUrl := fmt.Sprintf(hubRSSUrl, hub)
-	items, err := s.client.parse(ctx, hubUrl, limit)
+
+	articles, err := s.parseFromUrl(ctx, hubUrl, limit)
 	if err != nil {
-		return nil, fmt.Errorf("base parse: %w", err)
+		return nil, err
+	}
+	return articles, nil
+}
+
+func (s *Service) parseFromUrl(ctx context.Context, url string, limit int) ([]Article, error) {
+	var articles []Article
+	if err := core_retry.Do(ctx, 3, 1*time.Second, s.log, func(ctx context.Context) error {
+		items, err := s.client.parse(ctx, url, limit)
+		if err != nil {
+			return err
+		}
+		articles, err = convertToArticle(items)
+		if err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("retry error: %w", err)
 	}
 
+	return articles, nil
+}
+
+func convertToArticle(items []Item) ([]Article, error) {
 	articles := make([]Article, 0, len(items))
 	for _, item := range items {
 		article, err := itemToArticle(item)
 		if err != nil {
-			return nil, fmt.Errorf("failed turn item into article: %w", err)
+			return nil, core_errors.Wrap(
+				core_errors.ErrInternal,
+				err,
+				"failed turn item into article",
+			)
 		}
 		articles = append(articles, article)
 	}
-
 	return articles, nil
 }
 
@@ -66,19 +86,27 @@ func timeParse(value string) (time.Time, error) {
 
 	result, err := time.Parse(layout, value)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("time parse: %w", err)
+		return time.Time{}, core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"time parse",
+		)
 	}
 	return result, nil
 }
 
 func itemToArticle(item Item) (Article, error) {
-	time, err := timeParse(item.PubDate)
+	t, err := timeParse(item.PubDate)
 	if err != nil {
-		return Article{}, fmt.Errorf("item to article: %w", err)
+		return Article{}, core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"item to article",
+		)
 	}
 	return Article{
 		Title: item.Title,
 		Link:  item.Link,
-		Date:  time,
+		Date:  t,
 	}, nil
 }

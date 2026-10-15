@@ -15,7 +15,7 @@ type Handler struct {
 	*core_telegram.BaseHandler
 	service *Service
 
-	mtx    sync.Mutex
+	mtx    sync.RWMutex
 	states map[int64]*NewsDialogState
 }
 
@@ -60,15 +60,11 @@ func (h *Handler) HandleCallback(ctx context.Context, b *bot.Bot, update *models
 
 	if !ok {
 		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
 			Text:   "Ошибка, начните заново",
-			ChatID: userID,
 		})
 		if err != nil {
-			h.Log.Warn("failed to send message",
-				zap.Int64("user_id", userID),
-				zap.Int64("chat_id", chatID),
-				zap.Error(err),
-			)
+			h.Log.Warn("failed to send message", zap.Int64("user_id", chatID), zap.Error(err))
 		}
 		return
 	}

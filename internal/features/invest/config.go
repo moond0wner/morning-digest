@@ -1,8 +1,9 @@
 package invest
 
 import (
-	"errors"
 	"os"
+
+	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
 )
 
 const (
@@ -37,11 +38,11 @@ type config struct {
 func newConfig() (config, error) {
 	token := os.Getenv("INVEST_TOKEN")
 	if token == "" {
-		return config{}, errors.New("empty INVEST_TOKEN")
+		return config{}, core_errors.New(core_errors.ErrInternal, "empty INVEST_TOKEN")
 	}
 	accountId := os.Getenv("INVEST_ACCOUNT_ID")
 	if accountId == "" {
-		return config{}, errors.New("empty INVEST_ACCOUNT_ID")
+		return config{}, core_errors.New(core_errors.ErrInternal, "empty INVEST_ACCOUNT_ID")
 	}
 
 	return config{

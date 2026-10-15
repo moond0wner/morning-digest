@@ -2,6 +2,8 @@ package weather
 
 import (
 	"context"
+	"strings"
+	"sync"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -13,6 +15,8 @@ import (
 type Handler struct {
 	*core_telegram.BaseHandler
 	service *Service
+
+	mtx sync.RWMutex
 }
 
 func NewHandler(log *core_logger.Logger, srvc *Service) *Handler {
@@ -24,18 +28,19 @@ func NewHandler(log *core_logger.Logger, srvc *Service) *Handler {
 
 func (h *Handler) Weather(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
+	args := strings.TrimSpace(strings.TrimPrefix(update.Message.Text, "/weather"))
 
-	weather, err := h.service.Get(ctx, "Saratov")
-	if err != nil {
-		h.Log.Error("get weather", zap.Error(err))
-		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+	if args == "" {
+		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,
-			Text:   "Не удалось получить погоду",
+			Text:   "Укажите город: /weather Москва",
 		})
+		return
+	}
 
-		if err != nil {
-			h.Log.Warn("failed to send message", zap.Int64("user_id", chatID), zap.Error(err))
-		}
+	weather, err := h.service.Get(ctx, args)
+	if err != nil {
+		h.ReplyError(ctx, b, chatID, "Не удалось получить погоду", err)
 		return
 	}
 
