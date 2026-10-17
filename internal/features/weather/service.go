@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
@@ -14,9 +13,10 @@ import (
 type service struct {
 	client *client
 	log    *core_logger.Logger
+	retry  *core_retry.Retrier
 }
 
-func newService(logger *core_logger.Logger) (*service, error) {
+func newService(logger *core_logger.Logger, retrier *core_retry.Retrier) (*service, error) {
 	config, err := newConfig()
 	if err != nil {
 		return nil, fmt.Errorf("load weather config: %w", err)
@@ -25,6 +25,7 @@ func newService(logger *core_logger.Logger) (*service, error) {
 	return &service{
 		client: newClient(config.apiKey),
 		log:    logger,
+		retry:  retrier,
 	}, nil
 }
 
@@ -34,7 +35,7 @@ func (s *service) GetCandidates(ctx context.Context, city string) ([]geoResponse
 
 func (s *service) GetByCoords(ctx context.Context, lat, lon float64) (Weather, error) {
 	var weather Weather
-	err := core_retry.Do(ctx, 3, 1*time.Second, s.log, func(ctx context.Context) error {
+	err := s.retry.Do(ctx, func(ctx context.Context) error {
 		resp, err := s.client.getWeather(ctx, lat, lon)
 		if err != nil {
 			return err

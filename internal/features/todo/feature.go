@@ -2,7 +2,6 @@ package todo
 
 import (
 	"context"
-	"time"
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
@@ -31,10 +30,8 @@ func (f *Feature) Init(ctx context.Context) error {
 	service := newService(repository, f.Log)
 	f.handler = newHandler(f.Log, service)
 
-	return core_feature.WithTimeout(ctx, 30*time.Second, func(ctx context.Context) error {
-		err := f.handler.service.repository.createTable()
-		return err
-	})
+	err = f.handler.service.repository.createTable()
+	return err
 }
 
 func (f *Feature) Handle() []core_telegram.Handle {

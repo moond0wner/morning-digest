@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
 	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
 	"go.uber.org/zap"
@@ -62,13 +63,10 @@ func (h *handler) handleCallback(ctx context.Context, b *bot.Bot, update *models
 	state, ok := h.getState(userID)
 
 	if !ok {
-		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatID,
-			Text:   "Ошибка, начните заново",
-		})
-		if err != nil {
-			h.Log.Warn("failed to send message", zap.Int64("user_id", chatID), zap.Error(err))
-		}
+		h.ReplyError(ctx, b, chatID, "Ошибка, начните заново", core_errors.New(
+			core_errors.ErrUserInput,
+			"state error",
+		))
 		return
 	}
 

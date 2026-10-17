@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/go-telegram/bot"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
@@ -14,11 +13,12 @@ import (
 )
 
 type Bot struct {
-	bot *bot.Bot
-	log *core_logger.Logger
+	bot     *bot.Bot
+	log     *core_logger.Logger
+	retrier *core_retry.Retrier
 }
 
-func NewBot(ctx context.Context, logger *core_logger.Logger) (*Bot, error) {
+func NewBot(ctx context.Context, logger *core_logger.Logger, retrier *core_retry.Retrier) (*Bot, error) {
 	config, err := newConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load bot config: %w", err)
@@ -38,7 +38,7 @@ func NewBot(ctx context.Context, logger *core_logger.Logger) (*Bot, error) {
 	}
 
 	var b *bot.Bot
-	if err := core_retry.Do(ctx, 3, 1*time.Second, logger, func(ctx context.Context) error {
+	if err := retrier.Do(ctx, func(ctx context.Context) error {
 		var err error
 		b, err = bot.New(config.botToken, opts...)
 		return err
@@ -47,8 +47,9 @@ func NewBot(ctx context.Context, logger *core_logger.Logger) (*Bot, error) {
 	}
 
 	return &Bot{
-		bot: b,
-		log: logger,
+		bot:     b,
+		log:     logger,
+		retrier: retrier,
 	}, nil
 
 }

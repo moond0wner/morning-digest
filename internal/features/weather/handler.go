@@ -35,13 +35,10 @@ func (h *handler) weather(ctx context.Context, b *bot.Bot, update *models.Update
 	userID := update.Message.From.ID
 	args := strings.TrimSpace(strings.TrimPrefix(update.Message.Text, "/weather"))
 	if args == "" {
-		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatID,
-			Text:   "Укажите город: /weather Москва",
-		})
-		if err != nil {
-			h.Log.Warn("failed to send message", zap.Error(err))
-		}
+		h.ReplyError(ctx, b, chatID, "Укажите город: /weather Москва", core_errors.New(
+			core_errors.ErrUserInput,
+			"user input error",
+		))
 		return
 	}
 
