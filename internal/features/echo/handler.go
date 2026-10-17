@@ -10,17 +10,17 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+type handler struct {
 	*core_telegram.BaseHandler
 }
 
-func NewHandler(logger *core_logger.Logger) *Handler {
-	return &Handler{
+func newHandler(logger *core_logger.Logger) *handler {
+	return &handler{
 		BaseHandler: core_telegram.NewBaseHandler(logger),
 	}
 }
 
-func (h *Handler) Echo(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *handler) Echo(ctx context.Context, b *bot.Bot, update *models.Update) {
 	if update.Message == nil {
 		return
 	}
@@ -38,7 +38,7 @@ func (h *Handler) Echo(ctx context.Context, b *bot.Bot, update *models.Update) {
 	}
 }
 
-func (h *Handler) Handle() []core_telegram.Handle {
+func (h *handler) Handle() []core_telegram.Handle {
 	return []core_telegram.Handle{
 		{
 			HandleType: bot.HandlerTypeMessageText,

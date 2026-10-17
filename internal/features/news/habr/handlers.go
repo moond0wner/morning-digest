@@ -9,11 +9,11 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
-func (h *Handler) handleChoiceSource(
+func (h *handler) handleChoiceSource(
 	ctx context.Context,
 	b *bot.Bot,
 	update *models.Update,
-	state *NewsDialogState,
+	state *newsDialogState,
 	chatID int64,
 	msgID int,
 ) {
@@ -21,35 +21,35 @@ func (h *Handler) handleChoiceSource(
 	switch data {
 	case cbSourceBase:
 		state.SourceType = "base"
-		state.Step = ChoiceLimit
-		h.editMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
+		state.Step = choiceLimit
+		h.EditMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
 	case cbSourceHub:
 		state.SourceType = "hub"
-		state.Step = ChoiceHub
-		h.editMessage(ctx, b, chatID, msgID, "Выберите хаб", hubKeyboard())
+		state.Step = choiceHub
+		h.EditMessage(ctx, b, chatID, msgID, "Выберите хаб", hubKeyboard())
 	}
 }
 
-func (h *Handler) handleChoiceHub(
+func (h *handler) handleChoiceHub(
 	ctx context.Context,
 	b *bot.Bot,
 	update *models.Update,
-	state *NewsDialogState,
+	state *newsDialogState,
 	chatID int64,
 	msgID int,
 ) {
 	data := update.CallbackQuery.Data
 	hub := strings.TrimPrefix(data, cbHubPrefix)
 	state.Hub = hub
-	state.Step = ChoiceLimit
-	h.editMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
+	state.Step = choiceLimit
+	h.EditMessage(ctx, b, chatID, msgID, "Выберите количество статей", limitKeyboard())
 }
 
-func (h *Handler) handleChoiceLimit(
+func (h *handler) handleChoiceLimit(
 	ctx context.Context,
 	b *bot.Bot,
 	update *models.Update,
-	state *NewsDialogState,
+	state *newsDialogState,
 	chatID int64,
 	userID int64,
 ) {

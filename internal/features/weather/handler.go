@@ -12,21 +12,21 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+type handler struct {
 	*core_telegram.BaseHandler
-	service *Service
+	service *service
 
 	mtx sync.RWMutex
 }
 
-func NewHandler(log *core_logger.Logger, srvc *Service) *Handler {
-	return &Handler{
+func newHandler(log *core_logger.Logger, srvc *service) *handler {
+	return &handler{
 		BaseHandler: core_telegram.NewBaseHandler(log),
 		service:     srvc,
 	}
 }
 
-func (h *Handler) Weather(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *handler) weather(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
 	args := strings.TrimSpace(strings.TrimPrefix(update.Message.Text, "/weather"))
 
@@ -38,7 +38,7 @@ func (h *Handler) Weather(ctx context.Context, b *bot.Bot, update *models.Update
 		return
 	}
 
-	weather, err := h.service.Get(ctx, args)
+	weather, err := h.service.get(ctx, args)
 	if err != nil {
 		h.ReplyError(ctx, b, chatID, "Не удалось получить погоду", err)
 		return
@@ -55,13 +55,13 @@ func (h *Handler) Weather(ctx context.Context, b *bot.Bot, update *models.Update
 
 }
 
-func (h *Handler) Handle() []core_telegram.Handle {
+func (h *handler) handle() []core_telegram.Handle {
 	return []core_telegram.Handle{
 		{
 			HandleType: bot.HandlerTypeMessageText,
 			Pattern:    "weather",
 			MatchType:  bot.MatchTypeCommand,
-			Function:   h.Weather,
+			Function:   h.weather,
 		},
 	}
 }

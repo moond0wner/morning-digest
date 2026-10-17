@@ -10,13 +10,13 @@ import (
 	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 )
 
-type Service struct {
+type service struct {
 	client *client
 	log    *core_logger.Logger
 }
 
-func NewService(logger *core_logger.Logger) *Service {
-	return &Service{
+func newService(logger *core_logger.Logger) *service {
+	return &service{
 		client: newClient(),
 		log:    logger,
 	}
@@ -27,7 +27,7 @@ const (
 	hubRSSUrl  = "https://habr.com/ru/rss/hubs/%s/articles/?fl=ru"
 )
 
-func (s *Service) BaseParse(ctx context.Context, limit int) ([]Article, error) {
+func (s *service) baseParse(ctx context.Context, limit int) ([]Article, error) {
 	articles, err := s.parseFromUrl(ctx, baseRSSUrl, limit)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (s *Service) BaseParse(ctx context.Context, limit int) ([]Article, error) {
 	return articles, nil
 }
 
-func (s *Service) HubParse(ctx context.Context, hub string, limit int) ([]Article, error) {
+func (s *service) hubParse(ctx context.Context, hub string, limit int) ([]Article, error) {
 	hubUrl := fmt.Sprintf(hubRSSUrl, hub)
 
 	articles, err := s.parseFromUrl(ctx, hubUrl, limit)
@@ -46,7 +46,7 @@ func (s *Service) HubParse(ctx context.Context, hub string, limit int) ([]Articl
 	return articles, nil
 }
 
-func (s *Service) parseFromUrl(ctx context.Context, url string, limit int) ([]Article, error) {
+func (s *service) parseFromUrl(ctx context.Context, url string, limit int) ([]Article, error) {
 	var articles []Article
 	if err := core_retry.Do(ctx, 3, 1*time.Second, s.log, func(ctx context.Context) error {
 		items, err := s.client.parse(ctx, url, limit)

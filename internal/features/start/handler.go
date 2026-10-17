@@ -10,17 +10,17 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+type handler struct {
 	*core_telegram.BaseHandler
 }
 
-func NewHandler(log *core_logger.Logger) *Handler {
-	return &Handler{
+func newHandler(log *core_logger.Logger) *handler {
+	return &handler{
 		BaseHandler: core_telegram.NewBaseHandler(log),
 	}
 }
 
-func (h *Handler) Start(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *handler) start(ctx context.Context, b *bot.Bot, update *models.Update) {
 	text := "Привет, я твой бот-помощник. Пока что я ничего не умею, но все впереди!"
 	chatID := update.Message.Chat.ID
 
@@ -34,13 +34,13 @@ func (h *Handler) Start(ctx context.Context, b *bot.Bot, update *models.Update) 
 	}
 }
 
-func (h *Handler) Handle() []core_telegram.Handle {
+func (h *handler) handle() []core_telegram.Handle {
 	return []core_telegram.Handle{
 		{
 			HandleType: bot.HandlerTypeMessageText,
 			Pattern:    "start",
 			MatchType:  bot.MatchTypeCommand,
-			Function:   h.Start,
+			Function:   h.start,
 		},
 	}
 }

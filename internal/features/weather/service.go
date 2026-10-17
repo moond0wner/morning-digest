@@ -11,24 +11,24 @@ import (
 	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 )
 
-type Service struct {
+type service struct {
 	client *client
 	log    *core_logger.Logger
 }
 
-func NewService(logger *core_logger.Logger) (*Service, error) {
+func newService(logger *core_logger.Logger) (*service, error) {
 	config, err := newConfig()
 	if err != nil {
 		return nil, fmt.Errorf("load weather config: %w", err)
 	}
 
-	return &Service{
+	return &service{
 		client: newClient(config.apiKey),
 		log:    logger,
 	}, nil
 }
 
-func (s *Service) Get(ctx context.Context, city string) (Weather, error) {
+func (s *service) get(ctx context.Context, city string) (Weather, error) {
 	var weather Weather
 	err := core_retry.Do(ctx, 3, 1*time.Second, s.log, func(ctx context.Context) error {
 		lat, lon, err := s.client.getCoordinates(ctx, city)

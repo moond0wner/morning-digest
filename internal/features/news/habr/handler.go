@@ -11,31 +11,29 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+type handler struct {
 	*core_telegram.BaseHandler
-	service *Service
+	service *service
 
 	mtx    sync.RWMutex
-	states map[int64]*NewsDialogState
+	states map[int64]*newsDialogState
 }
 
-func NewHandler(log *core_logger.Logger, srvc *Service) *Handler {
-	return &Handler{
+func newHandler(log *core_logger.Logger, srvc *service) *handler {
+	return &handler{
 		BaseHandler: core_telegram.NewBaseHandler(log),
 		service:     srvc,
-		states:      make(map[int64]*NewsDialogState),
+		states:      make(map[int64]*newsDialogState),
 	}
 }
 
-func (h *Handler) StartDialog(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *handler) startDialog(ctx context.Context, b *bot.Bot, update *models.Update) {
 	userID := update.Message.From.ID
 	chatID := update.Message.Chat.ID
 
-	h.mtx.Lock()
-	h.states[userID] = &NewsDialogState{
-		Step: ChoiceSource,
-	}
-	h.mtx.Unlock()
+	h.setState(userID, &newsDialogState{
+		Step: choiceSource,
+	})
 
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      chatID,
@@ -43,11 +41,16 @@ func (h *Handler) StartDialog(ctx context.Context, b *bot.Bot, update *models.Up
 		ReplyMarkup: sourceKeyboard(),
 	})
 	if err != nil {
-		h.Log.Warn("failed to send message", zap.Int64("user_id", chatID), zap.Error(err))
+		h.Log.Warn(
+			"failed to send message",
+			zap.Int64("chat_id", chatID),
+			zap.Int64("user_id", userID),
+			zap.Error(err),
+		)
 	}
 }
 
-func (h *Handler) HandleCallback(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *handler) handleCallback(ctx context.Context, b *bot.Bot, update *models.Update) {
 	b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
 		CallbackQueryID: update.CallbackQuery.ID,
 	})
@@ -70,28 +73,28 @@ func (h *Handler) HandleCallback(ctx context.Context, b *bot.Bot, update *models
 	}
 
 	switch state.Step {
-	case ChoiceSource:
+	case choiceSource:
 		h.handleChoiceSource(ctx, b, update, state, chatID, msgID)
-	case ChoiceHub:
+	case choiceHub:
 		h.handleChoiceHub(ctx, b, update, state, chatID, msgID)
-	case ChoiceLimit:
+	case choiceLimit:
 		h.handleChoiceLimit(ctx, b, update, state, chatID, userID)
 	}
 }
 
-func (h *Handler) Handle() []core_telegram.Handle {
+func (h *handler) handle() []core_telegram.Handle {
 	return []core_telegram.Handle{
 		{
 			HandleType: bot.HandlerTypeMessageText,
 			Pattern:    "news",
 			MatchType:  bot.MatchTypeCommand,
-			Function:   h.StartDialog,
+			Function:   h.startDialog,
 		},
 		{
 			HandleType: bot.HandlerTypeCallbackQueryData,
 			Pattern:    "news:",
 			MatchType:  bot.MatchTypePrefix,
-			Function:   h.HandleCallback,
+			Function:   h.handleCallback,
 		},
 	}
 }

@@ -6,14 +6,13 @@ import (
 	"strings"
 
 	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
 	"go.uber.org/zap"
 )
 
-func (h *Handler) sendArticles(
+func (h *handler) sendArticles(
 	ctx context.Context,
 	b *bot.Bot,
-	state *NewsDialogState,
+	state *newsDialogState,
 	chatID int64,
 	userID int64,
 ) {
@@ -21,7 +20,7 @@ func (h *Handler) sendArticles(
 	var err error
 	switch state.SourceType {
 	case "base":
-		articles, err = h.service.BaseParse(ctx, state.Limit)
+		articles, err = h.service.baseParse(ctx, state.Limit)
 		if err != nil {
 			_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: chatID,
@@ -42,7 +41,7 @@ func (h *Handler) sendArticles(
 			return
 		}
 	case "hub":
-		articles, err = h.service.HubParse(ctx, state.Hub, state.Limit)
+		articles, err = h.service.hubParse(ctx, state.Hub, state.Limit)
 		if err != nil {
 			_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: chatID,
@@ -84,29 +83,6 @@ func (h *Handler) sendArticles(
 		h.Log.Warn("failed to send message",
 			zap.Int64("user_id", userID),
 			zap.Int64("chat_id", chatID),
-			zap.Error(err),
-		)
-	}
-}
-
-func (h *Handler) editMessage(
-	ctx context.Context,
-	b *bot.Bot,
-	chatID int64,
-	msgID int,
-	text string,
-	kb *models.InlineKeyboardMarkup,
-) {
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
-		Text:        text,
-		ReplyMarkup: kb,
-	})
-	if err != nil {
-		h.Log.Warn("failed to edit message",
-			zap.Int64("chat_id", chatID),
-			zap.Int("msg_id", msgID),
 			zap.Error(err),
 		)
 	}
