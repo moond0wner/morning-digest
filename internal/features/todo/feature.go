@@ -1,4 +1,4 @@
-package todoreminder
+package todo
 
 import (
 	"context"

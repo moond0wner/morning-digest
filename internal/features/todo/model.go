@@ -1,4 +1,4 @@
-package todoreminder
+package todo
 
 import (
 	"fmt"
@@ -33,19 +33,15 @@ func newTaskUninitialized() *Task {
 func (t *Task) String() string {
 	var sb strings.Builder
 
-	status := "⬜"
+	status := "❌"
 	if t.Completed {
 		status = "✅"
 	}
 
-	sb.WriteString(fmt.Sprintf("%s #%d — %s", status, t.ID, t.Title))
-
-	if t.Description != "" {
-		sb.WriteString("\n " + t.Description)
-	}
+	sb.WriteString(fmt.Sprintf("№%d - '%s': %s %s", t.ID, t.Title, t.Description, status))
 
 	if t.CompletedAt != nil {
-		sb.WriteString(fmt.Sprintf("\n✅ завершено %s", t.CompletedAt.Format("02 Jan 15:04")))
+		sb.WriteString(fmt.Sprintf("\n✅ завершено %s\n", t.CompletedAt.Format("02 Jan 15:04")))
 	}
 
 	return sb.String()

@@ -1,14 +1,13 @@
-package todoreminder
+package todo
 
 type step int
 
 const (
 	_ step = iota
 	choiceButton
-	createTask
 	inputTitle
 	inputDescription
-	getTasks
+	choiceTaskForDone
 )
 
 type taskDialogState struct {

@@ -36,13 +36,13 @@ func NewBot(ctx context.Context, logger *core_logger.Logger) (*Bot, error) {
 		bot.WithErrorsHandler(safeErrors),
 		bot.WithWorkers(10),
 	}
+
 	var b *bot.Bot
-	err = core_retry.Do(ctx, 3, 1*time.Second, logger, func(ctx context.Context) error {
+	if err := core_retry.Do(ctx, 3, 1*time.Second, logger, func(ctx context.Context) error {
 		var err error
 		b, err = bot.New(config.botToken, opts...)
 		return err
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, fmt.Errorf("failed to create bot: %w", err)
 	}
 
@@ -77,12 +77,16 @@ func (b *Bot) Register(handles ...Handle) {
 			core_telegram_middleware.Panic(),
 		)
 
-		b.bot.RegisterHandler(
-			handle.HandleType,
-			handle.Pattern,
-			handle.MatchType,
-			handler,
-		)
+		if handle.MatchFunc != nil {
+			b.bot.RegisterHandlerMatchFunc(handle.MatchFunc, handler)
+		} else {
+			b.bot.RegisterHandler(
+				handle.HandleType,
+				handle.Pattern,
+				handle.MatchType,
+				handler,
+			)
+		}
 
 		// TagHandler -> RequestID -> Logger -> Trace -> Panic -> фича-middleware -> handle.Function
 	}

@@ -1,8 +1,9 @@
-package todoreminder
+package todo
 
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"os"
 	"time"
 
@@ -75,7 +76,7 @@ func (r *repository) createTable() error {
 	return nil
 }
 
-func (r *repository) createTask(ctx context.Context, task Task) error {
+func (r *repository) createTask(ctx context.Context, task *Task) error {
 	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
 	defer cancel()
 
@@ -84,7 +85,7 @@ func (r *repository) createTask(ctx context.Context, task Task) error {
 	VALUES (?, ?, ?, ?);
 	`
 
-	_, err := r.db.Exec(
+	result, err := r.db.Exec(
 		sqlQuery,
 		task.Title,
 		task.Description,
@@ -98,6 +99,16 @@ func (r *repository) createTask(ctx context.Context, task Task) error {
 			"database exec",
 		)
 	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"get id from db",
+		)
+	}
+	task.ID = id
 
 	return nil
 }
@@ -151,39 +162,73 @@ func (r *repository) getTasks(ctx context.Context) ([]Task, error) {
 	return tasks, nil
 }
 
-// func (r *repository) getTask(ctx context.Context, taskID int64) (Task, error) {
-// 	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
-// 	defer cancel()
+func (r *repository) getTask(ctx context.Context, taskID int64) (Task, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
+	defer cancel()
 
-// 	sqlQuery := `
-// 	SELECT id, title, description, completed, created_at, completed_at
-// 	FROM tasks
-// 	WHERE id=$1;
-// 	`
+	sqlQuery := `
+	SELECT id, title, description, completed, created_at, completed_at
+	FROM tasks
+	WHERE id=$1;
+	`
 
-// 	row := r.db.QueryRow(sqlQuery, taskID)
+	row := r.db.QueryRow(sqlQuery, taskID)
 
-// 	var task Task
-// 	if err := row.Scan(
-// 		&task.ID,
-// 		&task.Title,
-// 		&task.Description,
-// 		&task.Completed,
-// 		&task.CreatedAt,
-// 		&task.CompletedAt,
-// 	); err != nil {
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			return Task{}, core_errors.Wrap(
-// 				core_errors.ErrNotFound,
-// 				err,
-// 				"task not found",
-// 			)
-// 		}
-// 		return Task{}, core_errors.Wrap(
-// 			core_errors.ErrInternal,
-// 			err,
-// 			"scan error",
-// 		)
-// 	}
-// 	return task, nil
-// }
+	var task Task
+	if err := row.Scan(
+		&task.ID,
+		&task.Title,
+		&task.Description,
+		&task.Completed,
+		&task.CreatedAt,
+		&task.CompletedAt,
+	); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Task{}, core_errors.Wrap(
+				core_errors.ErrNotFound,
+				err,
+				"task not found",
+			)
+		}
+		return Task{}, core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"scan error",
+		)
+	}
+	return task, nil
+}
+
+func (r *repository) updateTask(ctx context.Context, task Task) error {
+	ctx, cancel := context.WithTimeout(ctx, r.opTimeout)
+	defer cancel()
+
+	sqlQuery := `
+	UPDATE tasks
+	SET
+		title=$1,
+		description=$2,
+		completed=$3,
+		completed_at=$4
+	WHERE id=$5;
+	`
+
+	_, err := r.db.Exec(
+		sqlQuery,
+		task.Title,
+		task.Description,
+		task.Completed,
+		task.CompletedAt,
+		task.ID,
+	)
+
+	if err != nil {
+		return core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"database exec",
+		)
+	}
+
+	return nil
+}

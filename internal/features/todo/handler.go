@@ -1,7 +1,8 @@
-package todoreminder
+package todo
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/go-telegram/bot"
@@ -51,32 +52,27 @@ func (h *handler) startDialog(ctx context.Context, b *bot.Bot, update *models.Up
 	}
 }
 
-func (h *handler) handleCallback(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *handler) handleCallbackStep(ctx context.Context, b *bot.Bot, update *models.Update) {
 	b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
 		CallbackQueryID: update.CallbackQuery.ID,
 	})
 
+	data := update.CallbackQuery.Data
 	userID := update.CallbackQuery.From.ID
 	chatID := update.CallbackQuery.Message.Message.Chat.ID
 	msgID := update.CallbackQuery.Message.Message.ID
 
-	state, ok := h.getState(userID)
-
-	if !ok {
-		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatID,
-			Text:   "Ошибка, начните заново",
-		})
-		if err != nil {
-			h.Log.Warn("failed to send message", zap.Int64("user_id", chatID), zap.Error(err))
-		}
-		return
+	switch {
+	case data == cbCreateTask:
+		h.handleCreateTask(ctx, b, chatID, userID, msgID)
+	case data == cbGetTasks:
+		h.handleGetTasks(ctx, b, chatID, userID, msgID)
+	case data == cbShowTaskForDone:
+		h.handleShowTasksForDone(ctx, b, chatID, userID, msgID)
+	case strings.HasPrefix(data, cbCompleteTask):
+		h.handleCompleteTask(ctx, b, update, chatID, userID, msgID)
 	}
 
-	switch state.Step {
-	case choiceButton:
-		h.handleChoiceButton(ctx, b, update, state, chatID, userID, msgID)
-	}
 }
 
 func (h *handler) handleTextMessage(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -91,9 +87,9 @@ func (h *handler) handleTextMessage(ctx context.Context, b *bot.Bot, update *mod
 
 	switch state.Step {
 	case inputTitle:
-		h.handleTitle(ctx, b, state, chatID, userID, text)
+		h.handleTitle(ctx, b, chatID, userID, text)
 	case inputDescription:
-		h.handleDescription(ctx, b, state, chatID, userID, text)
+		h.handleDescription(ctx, b, chatID, userID, text)
 	}
 }
 
@@ -109,13 +105,17 @@ func (h *handler) handle() []core_telegram.Handle {
 			HandleType: bot.HandlerTypeCallbackQueryData,
 			Pattern:    "task:",
 			MatchType:  bot.MatchTypePrefix,
-			Function:   h.handleCallback,
+			Function:   h.handleCallbackStep,
 		},
 		{
-			HandleType: bot.HandlerTypeMessageText,
-			Pattern:    "",
-			MatchType:  bot.MatchTypePrefix,
-			Function:   h.handleTextMessage,
+			MatchFunc: func(update *models.Update) bool {
+				if update.Message == nil {
+					return false
+				}
+				_, ok := h.getState(update.Message.From.ID)
+				return ok
+			},
+			Function: h.handleTextMessage,
 		},
 	}
 }
