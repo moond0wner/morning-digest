@@ -2,6 +2,7 @@ package invest
 
 import (
 	"context"
+	"fmt"
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
@@ -46,4 +47,17 @@ func (f *Feature) Close(ctx context.Context) error {
 		return nil
 	}
 	return f.handler.service.close()
+}
+
+func (f *Feature) Brief(ctx context.Context) (string, error) {
+	if f.handler == nil {
+		return "", nil
+	}
+
+	p, err := f.handler.service.getPortfolio()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("💼 Портфель: %.0f ₽ (за день %+.0f ₽)", p.TotalAmount, p.DailyYield), nil
 }

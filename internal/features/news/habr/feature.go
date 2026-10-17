@@ -2,6 +2,7 @@ package habr
 
 import (
 	"context"
+	"strings"
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
@@ -35,4 +36,26 @@ func (f *Feature) Init(ctx context.Context) error {
 
 	_, err := f.handler.service.baseParse(ctx, 1)
 	return err
+}
+
+func (f *Feature) Brief(ctx context.Context) (string, error) {
+	if f.handler == nil {
+		return "", nil
+	}
+
+	articles, err := f.handler.service.baseParse(ctx, 3)
+	if err != nil {
+		return "", err
+	}
+
+	if len(articles) == 0 {
+		return "", nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString("📰 Хабр:\n")
+	for _, a := range articles {
+		sb.WriteString("• " + a.Title + "\n")
+	}
+	return strings.TrimSpace(sb.String()), nil
 }

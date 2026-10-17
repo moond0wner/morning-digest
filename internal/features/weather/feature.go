@@ -2,6 +2,7 @@ package weather
 
 import (
 	"context"
+	"fmt"
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
@@ -39,4 +40,17 @@ func (f *Feature) Init(ctx context.Context) error {
 
 	_, err = f.handler.service.client.getCoordinates(ctx, "Москва")
 	return err
+}
+
+func (f *Feature) Brief(ctx context.Context) (string, error) {
+	if f.handler == nil {
+		return "", nil
+	}
+
+	w, err := f.handler.service.GetByCoords(ctx, 51.53, 46.03)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("🌤 %s: %.0f°C, %s", w.City, w.Temp, w.Description), nil
 }

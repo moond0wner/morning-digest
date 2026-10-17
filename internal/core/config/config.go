@@ -17,6 +17,8 @@ type Config struct {
 	TimezoneStr string `yaml:"timezone"`
 
 	Timezone *time.Location `yaml:"-"`
+
+	AccountID string
 }
 
 func newConfig() (*Config, error) {
@@ -47,6 +49,16 @@ func newConfig() (*Config, error) {
 		)
 	}
 	config.Timezone = loc
+
+	tgID := os.Getenv("TELEGRAM_ACCOUNT_ID")
+	if tgID == "" {
+		return nil, core_errors.New(
+			core_errors.ErrInternal,
+			"empty TELEGRAM_ACCOUNT_ID",
+		)
+	}
+
+	config.AccountID = tgID
 
 	return config, nil
 }
