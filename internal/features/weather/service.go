@@ -28,31 +28,24 @@ func newService(logger *core_logger.Logger) (*service, error) {
 	}, nil
 }
 
-func (s *service) get(ctx context.Context, city string) (Weather, error) {
+func (s *service) GetCandidates(ctx context.Context, city string) ([]geoResponse, error) {
+	return s.client.getCoordinates(ctx, city)
+}
+
+func (s *service) GetByCoords(ctx context.Context, lat, lon float64) (Weather, error) {
 	var weather Weather
 	err := core_retry.Do(ctx, 3, 1*time.Second, s.log, func(ctx context.Context) error {
-		lat, lon, err := s.client.getCoordinates(ctx, city)
+		resp, err := s.client.getWeather(ctx, lat, lon)
 		if err != nil {
 			return err
 		}
-
-		response, err := s.client.getWeather(ctx, lat, lon)
-		if err != nil {
-			return err
-		}
-
-		weather, err = convertToWeather(response)
-		if err != nil {
-			return err
-		}
-		return nil
+		weather, err = convertToWeather(resp)
+		return err
 	})
 	if err != nil {
-		return Weather{}, fmt.Errorf("get weather for %s: %w", city, err)
+		return Weather{}, fmt.Errorf("get weather by coords: %w", err)
 	}
-
 	return weather, nil
-
 }
 
 func convertToWeather(response *weatherResponse) (Weather, error) {

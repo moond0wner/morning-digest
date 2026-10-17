@@ -36,7 +36,7 @@ func (f *Feature) Init(ctx context.Context) error {
 	f.handler = newHandler(f.Log, service)
 
 	return core_feature.WithTimeout(ctx, 30*time.Second, func(ctx context.Context) error {
-		_, err := f.handler.service.get(ctx, "Moscow")
+		_, err := f.handler.service.client.getCoordinates(ctx, "Москва")
 		return err
 	})
 }

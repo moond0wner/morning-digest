@@ -53,7 +53,7 @@ type weatherResponse struct {
 	Name string `json:"name"`
 }
 
-func (c *client) getCoordinates(ctx context.Context, city string) (lat, lot float64, err error) {
+func (c *client) getCoordinates(ctx context.Context, city string) ([]geoResponse, error) {
 	params := map[string]string{
 		"q":     city,
 		"limit": "5",
@@ -62,7 +62,7 @@ func (c *client) getCoordinates(ctx context.Context, city string) (lat, lot floa
 
 	url, err := buildURL(baseGeoUrl, params)
 	if err != nil {
-		return 0, 0, core_errors.Wrap(
+		return nil, core_errors.Wrap(
 			core_errors.ErrInternal,
 			err,
 			"parse geocoding url",
@@ -70,7 +70,7 @@ func (c *client) getCoordinates(ctx context.Context, city string) (lat, lot floa
 	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return 0, 0, core_errors.Wrap(
+		return nil, core_errors.Wrap(
 			core_errors.ErrExternalAPI,
 			err,
 			"create geocoding request",
@@ -79,7 +79,7 @@ func (c *client) getCoordinates(ctx context.Context, city string) (lat, lot floa
 
 	response, err := c.http.Do(request)
 	if err != nil {
-		return 0, 0, core_errors.Wrap(
+		return nil, core_errors.Wrap(
 			core_errors.ErrExternalAPI,
 			err,
 			"do geocoding request",
@@ -88,7 +88,7 @@ func (c *client) getCoordinates(ctx context.Context, city string) (lat, lot floa
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return 0, 0, core_errors.Wrap(
+		return nil, core_errors.Wrap(
 			core_errors.CheckStatusCode(response.StatusCode),
 			fmt.Errorf("status %s", response.Status),
 			"geocoding status",
@@ -97,35 +97,37 @@ func (c *client) getCoordinates(ctx context.Context, city string) (lat, lot floa
 
 	var geo []geoResponse
 	if err := json.NewDecoder(response.Body).Decode(&geo); err != nil {
-		return 0, 0, core_errors.Wrap(
+		return nil, core_errors.Wrap(
 			core_errors.ErrInternal,
 			err,
 			"decode geocoding response",
 		)
 	}
 	if len(geo) == 0 {
-		return 0, 0, core_errors.Wrap(
+		return nil, core_errors.Wrap(
 			core_errors.ErrNotFound,
 			fmt.Errorf("city %q", city),
 			fmt.Sprintf("city not found: %s", city),
 		)
 	}
 
-	var chosen *geoResponse
-	for i := range geo {
-		if geo[i].Country == "RU" {
-			chosen = &geo[i]
-			break
-		}
-	}
-	if chosen == nil {
-		return 0, 0, core_errors.Wrap(
-			core_errors.ErrNotFound,
-			fmt.Errorf("city %q not found in RU", city),
-			"get coordinates",
-		)
-	}
-	return chosen.Lat, chosen.Lon, nil
+	// var chosen *geoResponse
+	// for i := range geo {
+	// 	if geo[i].Country == "RU" {
+	// 		chosen = &geo[i]
+	// 		break
+	// 	}
+	// }
+	// if chosen == nil {
+	// 	return 0, 0, core_errors.Wrap(
+	// 		core_errors.ErrNotFound,
+	// 		fmt.Errorf("city %q not found in RU", city),
+	// 		"get coordinates",
+	// 	)
+	// }
+	// return chosen.Lat, chosen.Lon, nil
+
+	return geo, nil
 }
 
 func (c *client) getWeather(ctx context.Context, lat, lon float64) (*weatherResponse, error) {
