@@ -22,6 +22,7 @@ func newService(briefers []Briefer, log *core_logger.Logger) *service {
 
 func (s *service) build(ctx context.Context) (string, error) {
 	var sb strings.Builder
+	sb.WriteString("Доброе утро!\n\n")
 
 	for _, b := range s.briefers {
 		text, err := b.Brief(ctx)

@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
 	core_config "github.com/moond0wner/morning-digest/internal/core/config"
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
@@ -56,7 +57,6 @@ func main() {
 		logger.Error("create repository", zap.Error(err))
 		os.Exit(1)
 	}
-	defer todoBaseRepo.Close()
 
 	features := []core_feature.Feature{
 		start.NewFeature(logger),
@@ -73,7 +73,8 @@ func main() {
 		}
 	}
 
-	scheduler := core_scheduler.NewSchedueler(time.Local, 8, 0)
+	//scheduler := core_scheduler.NewSchedueler(time.Local, 8, 0)
+	scheduler := core_scheduler.NewTicker(1 * time.Minute)
 	digestCfg := digest.Config{
 		AccountID: cfg.AccountID,
 	}
@@ -90,14 +91,12 @@ func main() {
 
 	for _, f := range features {
 		logger.Debug("initializing feature", zap.String("feature", f.Name()))
-		if err := f.Init(ctx); err != nil {
-			if err := retrier.Do(ctx, f.Init); err != nil {
-				logger.Warn("feature disabled",
-					zap.String("feature", f.Name()),
-					zap.Error(err),
-				)
-				continue
-			}
+		if err := retrier.Do(ctx, f.Init); err != nil {
+			logger.Warn("feature disabled",
+				zap.String("feature", f.Name()),
+				zap.Error(err),
+			)
+			continue
 		}
 		bot.Register(f.Handle()...)
 		logger.Debug("feature registered", zap.String("feature", f.Name()))
