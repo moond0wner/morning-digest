@@ -73,8 +73,7 @@ func main() {
 		}
 	}
 
-	//scheduler := core_scheduler.NewSchedueler(time.Local, 8, 0)
-	scheduler := core_scheduler.NewTicker(1 * time.Minute)
+	scheduler := core_scheduler.NewSchedueler(time.Local, 8, 0)
 	digestCfg := digest.Config{
 		AccountID: cfg.AccountID,
 	}
