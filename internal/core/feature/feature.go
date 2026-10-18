@@ -20,8 +20,8 @@ type BaseFeature struct {
 	Log     *core_logger.Logger
 }
 
-func NewBaseFeature(name string, logger *core_logger.Logger, handles []core_telegram.Handle) BaseFeature {
-	return BaseFeature{name: name, Log: logger, handles: handles}
+func NewBaseFeature(name string, logger *core_logger.Logger, handles []core_telegram.Handle) *BaseFeature {
+	return &BaseFeature{name: name, Log: logger, handles: handles}
 }
 
 func (b *BaseFeature) Name() string                    { return b.name }

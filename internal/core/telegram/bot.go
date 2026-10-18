@@ -13,7 +13,7 @@ import (
 )
 
 type Bot struct {
-	bot     *bot.Bot
+	Bot     *bot.Bot
 	log     *core_logger.Logger
 	retrier *core_retry.Retrier
 }
@@ -47,7 +47,7 @@ func NewBot(ctx context.Context, logger *core_logger.Logger, retrier *core_retry
 	}
 
 	return &Bot{
-		bot:     b,
+		Bot:     b,
 		log:     logger,
 		retrier: retrier,
 	}, nil
@@ -56,7 +56,7 @@ func NewBot(ctx context.Context, logger *core_logger.Logger, retrier *core_retry
 
 func (b *Bot) Start(ctx context.Context) {
 	b.log.Debug("Starting bot")
-	b.bot.Start(ctx)
+	b.Bot.Start(ctx)
 }
 
 func (b *Bot) Register(handles ...Handle) {
@@ -79,9 +79,9 @@ func (b *Bot) Register(handles ...Handle) {
 		)
 
 		if handle.MatchFunc != nil {
-			b.bot.RegisterHandlerMatchFunc(handle.MatchFunc, handler)
+			b.Bot.RegisterHandlerMatchFunc(handle.MatchFunc, handler)
 		} else {
-			b.bot.RegisterHandler(
+			b.Bot.RegisterHandler(
 				handle.HandleType,
 				handle.Pattern,
 				handle.MatchType,

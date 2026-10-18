@@ -2,6 +2,7 @@ package core_config
 
 import (
 	"os"
+	"strconv"
 	"time"
 
 	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
@@ -18,7 +19,7 @@ type Config struct {
 
 	Timezone *time.Location `yaml:"-"`
 
-	AccountID string
+	AccountID int64
 }
 
 func newConfig() (*Config, error) {
@@ -50,11 +51,20 @@ func newConfig() (*Config, error) {
 	}
 	config.Timezone = loc
 
-	tgID := os.Getenv("TELEGRAM_ACCOUNT_ID")
-	if tgID == "" {
+	tgIDStr := os.Getenv("TELEGRAM_ACCOUNT_ID")
+	if tgIDStr == "" {
 		return nil, core_errors.New(
 			core_errors.ErrInternal,
 			"empty TELEGRAM_ACCOUNT_ID",
+		)
+	}
+
+	tgID, err := strconv.ParseInt(tgIDStr, 10, 64)
+	if err != nil {
+		return nil, core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"error convertation tgID",
 		)
 	}
 

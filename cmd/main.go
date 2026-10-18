@@ -13,6 +13,7 @@ import (
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
 	core_repository "github.com/moond0wner/morning-digest/internal/core/repository"
 	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
+	core_scheduler "github.com/moond0wner/morning-digest/internal/core/scheduler"
 	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
 	"github.com/moond0wner/morning-digest/internal/features/digest"
 	"github.com/moond0wner/morning-digest/internal/features/echo"
@@ -48,6 +49,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	sender := core_telegram.NewMessageSender(bot.Bot)
+
 	todoBaseRepo, err := core_repository.NewBaseRepository("todo")
 	if err != nil {
 		logger.Error("create repository", zap.Error(err))
@@ -70,7 +73,18 @@ func main() {
 		}
 	}
 
-	digestFeature := digest.NewFeature(logger, briefers)
+	scheduler := core_scheduler.NewSchedueler(time.Local, 8, 0)
+	digestCfg := digest.Config{
+		AccountID: cfg.AccountID,
+	}
+	digestFeature := digest.NewFeature(
+		logger,
+		briefers,
+		scheduler,
+		digestCfg,
+		sender,
+	)
+
 	features = append(features, digestFeature)
 	features = append(features, echo.NewFeature(logger)) // этот хендлер должен быть всегда последним в регистрации
 
@@ -98,6 +112,7 @@ func main() {
 		}
 	}()
 
+	go digestFeature.RunScheduler(ctx)
 	bot.Start(ctx)
 	logger.Debug("bot is stopped")
 }
