@@ -14,7 +14,5 @@ services:
       - LOGGER_FOLDER=/app/out/logs
     volumes:
       - ${PROJECT_ROOT}/out/logs:/app/out/logs
-      - ${PROJECT_ROOT}/out/logs:/app/out/logs
-    ports:
-      - "5050:5050"
+      - ${PROJECT_ROOT}/out/logs:/app/out/data
     restart: always
