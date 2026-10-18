@@ -22,13 +22,10 @@ func (b *BaseHandler) ReplyError(
 		switch e.Type {
 		case core_errors.ErrUserInput:
 			b.Log.Warn(e.Type.String(), zap.Error(err))
-			userMsg = "Проверьте ввод"
 		case core_errors.ErrNotFound:
 			b.Log.Warn(e.Type.String(), zap.Error(err))
-			userMsg = "Не найдено"
 		case core_errors.ErrExternalAPI:
 			b.Log.Warn(e.Type.String(), zap.Error(err))
-			userMsg = "Сервис временно недоступен"
 		case core_errors.ErrInternal:
 			b.Log.Error(e.Type.String(), zap.Error(err))
 		default:
@@ -38,6 +35,9 @@ func (b *BaseHandler) ReplyError(
 		b.Log.Error("unknown error", zap.Error(err))
 	}
 
+	if userMsg == "" {
+		userMsg = "Не удалось обработать запрос"
+	}
 	_, err = bt.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
 		Text:   userMsg,

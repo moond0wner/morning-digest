@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
+	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 	"opensource.tbank.ru/invest/invest-go/investgo"
 )
 
@@ -14,9 +15,10 @@ const rubTicker = "RUB000UTSTOM"
 type service struct {
 	client *client
 	log    *core_logger.Logger
+	retry  *core_retry.Retrier
 }
 
-func newService(ctx context.Context, logger *core_logger.Logger) (*service, error) {
+func newService(ctx context.Context, logger *core_logger.Logger, retrier *core_retry.Retrier) (*service, error) {
 	clnt, err := newClient(ctx, logger)
 	if err != nil {
 		return nil, fmt.Errorf("create invest service: %w", err)
@@ -24,6 +26,7 @@ func newService(ctx context.Context, logger *core_logger.Logger) (*service, erro
 	return &service{
 		client: clnt,
 		log:    logger,
+		retry:  retrier,
 	}, nil
 }
 

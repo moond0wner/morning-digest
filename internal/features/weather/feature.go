@@ -2,21 +2,24 @@ package weather
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
+	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
 )
 
 type Feature struct {
-	core_feature.BaseFeature
+	*core_feature.BaseFeature
 	handler *handler
+	retrier *core_retry.Retrier
 }
 
-func NewFeature(logger *core_logger.Logger) *Feature {
+func NewFeature(logger *core_logger.Logger, retrier *core_retry.Retrier) *Feature {
 	return &Feature{
 		BaseFeature: core_feature.NewBaseFeature("weather", logger, nil),
+		retrier:     retrier,
 	}
 }
 
@@ -28,15 +31,26 @@ func (f *Feature) Handle() []core_telegram.Handle {
 }
 
 func (f *Feature) Init(ctx context.Context) error {
-	service, err := newService(f.Log)
+	service, err := newService(f.Log, f.retrier)
 	if err != nil {
 		return err
 	}
 
 	f.handler = newHandler(f.Log, service)
 
-	return core_feature.WithTimeout(ctx, 30*time.Second, func(ctx context.Context) error {
-		_, err := f.handler.service.client.getCoordinates(ctx, "Москва")
-		return err
-	})
+	_, err = f.handler.service.client.getCoordinates(ctx, "Москва")
+	return err
+}
+
+func (f *Feature) Brief(ctx context.Context) (string, error) {
+	if f.handler == nil {
+		return "", nil
+	}
+
+	w, err := f.handler.service.GetByCoords(ctx, 51.53, 46.03)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("🌤 %s: %.0f°C, %s", w.City, w.Temp, w.Description), nil
 }

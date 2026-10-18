@@ -13,12 +13,14 @@ import (
 type service struct {
 	client *client
 	log    *core_logger.Logger
+	retry  *core_retry.Retrier
 }
 
-func newService(logger *core_logger.Logger) *service {
+func newService(logger *core_logger.Logger, retrier *core_retry.Retrier) *service {
 	return &service{
 		client: newClient(),
 		log:    logger,
+		retry:  retrier,
 	}
 }
 
@@ -48,7 +50,7 @@ func (s *service) hubParse(ctx context.Context, hub string, limit int) ([]Articl
 
 func (s *service) parseFromUrl(ctx context.Context, url string, limit int) ([]Article, error) {
 	var articles []Article
-	if err := core_retry.Do(ctx, 3, 1*time.Second, s.log, func(ctx context.Context) error {
+	if err := s.retry.Do(ctx, func(ctx context.Context) error {
 		items, err := s.client.parse(ctx, url, limit)
 		if err != nil {
 			return err

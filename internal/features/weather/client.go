@@ -110,23 +110,6 @@ func (c *client) getCoordinates(ctx context.Context, city string) ([]geoResponse
 			fmt.Sprintf("city not found: %s", city),
 		)
 	}
-
-	// var chosen *geoResponse
-	// for i := range geo {
-	// 	if geo[i].Country == "RU" {
-	// 		chosen = &geo[i]
-	// 		break
-	// 	}
-	// }
-	// if chosen == nil {
-	// 	return 0, 0, core_errors.Wrap(
-	// 		core_errors.ErrNotFound,
-	// 		fmt.Errorf("city %q not found in RU", city),
-	// 		"get coordinates",
-	// 	)
-	// }
-	// return chosen.Lat, chosen.Lon, nil
-
 	return geo, nil
 }
 

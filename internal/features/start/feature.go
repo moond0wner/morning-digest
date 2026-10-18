@@ -6,7 +6,7 @@ import (
 )
 
 type Feature struct {
-	core_feature.BaseFeature
+	*core_feature.BaseFeature
 	handler *handler
 }
 
