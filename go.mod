@@ -6,6 +6,8 @@ require (
 	github.com/go-telegram/bot v1.27.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	go.uber.org/zap v1.28.0
+	gopkg.in/yaml.v3 v3.0.1
+	modernc.org/sqlite v1.60.1
 	opensource.tbank.ru/invest/invest-go v1.51.0
 )
 
@@ -31,9 +33,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.77.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
-	modernc.org/sqlite v1.60.1 // indirect
 )
