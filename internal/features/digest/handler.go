@@ -36,13 +36,6 @@ func (h *handler) handleDigest(ctx context.Context, b *bot.Bot, update *models.U
 	})
 }
 
-func (h *handler) sendDigestOnUserID(ctx context.Context, b *bot.Bot, digest string, accountID int64) {
-	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: accountID,
-		Text:   digest,
-	})
-}
-
 func (h *handler) handle() []core_telegram.Handle {
 	return []core_telegram.Handle{
 		{

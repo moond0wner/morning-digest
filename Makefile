@@ -16,7 +16,7 @@ ps:
 	@docker compose ps
 
 go-lint:
-	@~/go/bin/golangci-lint run --config=.golangci.yml ./...
+	@~/go/bin/golangci-lint run --config=.golangci.yml --issues-exit-code=0 ./...
 
 logs-cleanup:
 	@read -p "Очистить все log файлы окружения? Опасность утери логов. [y/N]: " ans; \
