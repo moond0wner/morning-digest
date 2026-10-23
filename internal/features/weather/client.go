@@ -12,19 +12,23 @@ import (
 )
 
 const (
-	baseGeoUrl     = "http://api.openweathermap.org/geo/1.0/direct?"
-	baseWeatherUrl = "https://api.openweathermap.org/data/2.5/weather"
+	baseGeoURL     = "http://api.openweathermap.org/geo/1.0/direct?"
+	baseWeatherURL = "https://api.openweathermap.org/data/2.5/weather"
 )
 
 type client struct {
-	apiKey string
-	http   *http.Client
+	apiKey         string
+	http           *http.Client
+	geoBaseURL     string
+	weatherBaseURL string
 }
 
-func newClient(apiKey string) *client {
+func newClient(apiKey, geoURL, weatherURL string) *client {
 	return &client{
-		apiKey: apiKey,
-		http:   &http.Client{Timeout: 10 * time.Second},
+		apiKey:         apiKey,
+		http:           &http.Client{Timeout: 10 * time.Second},
+		geoBaseURL:     geoURL,
+		weatherBaseURL: weatherURL,
 	}
 }
 
@@ -60,7 +64,7 @@ func (c *client) getCoordinates(ctx context.Context, city string) ([]geoResponse
 		"appid": c.apiKey,
 	}
 
-	url, err := buildURL(baseGeoUrl, params)
+	url, err := buildURL(c.geoBaseURL, params)
 	if err != nil {
 		return nil, core_errors.Wrap(
 			core_errors.ErrInternal,
@@ -122,7 +126,7 @@ func (c *client) getWeather(ctx context.Context, lat, lon float64) (*weatherResp
 		"lang":  "ru",
 	}
 
-	url, err := buildURL(baseWeatherUrl, params)
+	url, err := buildURL(c.weatherBaseURL, params)
 	if err != nil {
 		return nil, core_errors.Wrap(
 			core_errors.ErrInternal,

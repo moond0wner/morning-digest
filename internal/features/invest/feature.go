@@ -24,10 +24,11 @@ func NewFeature(logger *core_logger.Logger, retrier *core_retry.Retrier) *Featur
 }
 
 func (f *Feature) Init(ctx context.Context) error {
-	service, err := newService(ctx, f.Log, f.retrier)
+	client, err := newClient(ctx, f.Log)
 	if err != nil {
 		return err
 	}
+	service := newService(client, f.Log, f.retrier)
 
 	f.handler = newHandler(f.Log, service)
 

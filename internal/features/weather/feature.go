@@ -31,7 +31,17 @@ func (f *Feature) Handle() []core_telegram.Handle {
 }
 
 func (f *Feature) Init(ctx context.Context) error {
-	service, err := newService(f.Log, f.retrier)
+	config, err := newConfig()
+	if err != nil {
+		return fmt.Errorf("load weather config: %w", err)
+	}
+	client := newClient(
+		config.apiKey,
+		baseGeoURL,
+		baseWeatherURL,
+	)
+
+	service, err := newService(client, f.Log, f.retrier)
 	if err != nil {
 		return err
 	}
@@ -47,7 +57,7 @@ func (f *Feature) Brief(ctx context.Context) (string, error) {
 		return "", nil
 	}
 
-	w, err := f.handler.service.GetByCoords(ctx, 51.53, 46.03)
+	w, err := f.handler.service.getByCoords(ctx, 51.53, 46.03)
 	if err != nil {
 		return "", err
 	}

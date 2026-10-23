@@ -21,6 +21,14 @@ func newClient() *client {
 }
 
 func (c *client) parse(ctx context.Context, url string, limit int) ([]Item, error) {
+	if limit <= 0 {
+		return nil, core_errors.Wrap(
+			core_errors.ErrUserInput,
+			fmt.Errorf("limit must be positive"),
+			"invalid limit",
+		)
+	}
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, core_errors.Wrap(

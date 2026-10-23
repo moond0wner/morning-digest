@@ -6,10 +6,10 @@ import (
 )
 
 type Portfolio struct {
-	TotalAmount   float64 // общая стоимость
-	ExpectedYield float64 // доходность (в валюте)
-	DailyYield    float64 // доходность за день
-	Positions     []Position
+	TotalAmount   float64    // общая стоимость (в рублях)
+	ExpectedYield float64    // общая доходность за всё время (в рублях)
+	DailyYield    float64    // доходность за день (в рублях)
+	Positions     []Position // список позиций (акций)
 }
 
 type Position struct {
@@ -20,6 +20,7 @@ type Position struct {
 }
 
 func (p *Portfolio) String() string {
+	// TODO: Сделать лучше
 	var sb strings.Builder
 	sb.WriteString("Портфель\n\n")
 	fmt.Fprintf(&sb, "Стоимость: %.0f ₽\n", p.TotalAmount)

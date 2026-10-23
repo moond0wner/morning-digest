@@ -42,7 +42,7 @@ func (h *handler) weather(ctx context.Context, b *bot.Bot, update *models.Update
 		return
 	}
 
-	candidates, err := h.service.GetCandidates(ctx, args)
+	candidates, err := h.service.getCandidates(ctx, args)
 	if err != nil {
 		h.ReplyError(ctx, b, chatID, "Не удалось получить погоду", err)
 		return
@@ -57,7 +57,7 @@ func (h *handler) weather(ctx context.Context, b *bot.Bot, update *models.Update
 	}
 
 	if len(candidates) == 1 {
-		w, err := h.service.GetByCoords(ctx, candidates[0].Lat, candidates[0].Lon)
+		w, err := h.service.getByCoords(ctx, candidates[0].Lat, candidates[0].Lon)
 		if err != nil {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: chatID,
@@ -119,7 +119,7 @@ func (h *handler) handleGetCity(ctx context.Context, b *bot.Bot, update *models.
 	}
 
 	chosen := candidates[indexCity]
-	w, err := h.service.GetByCoords(ctx, chosen.Lat, chosen.Lon)
+	w, err := h.service.getByCoords(ctx, chosen.Lat, chosen.Lon)
 	if err != nil {
 		h.ReplyError(ctx, b, chatID, "Не удалось получить погоду", err)
 		return

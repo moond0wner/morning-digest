@@ -21,6 +21,7 @@ func sourceKeyboard() *models.InlineKeyboardMarkup {
 }
 
 func hubKeyboard() *models.InlineKeyboardMarkup {
+	// TODO: Добавить все разделы хабра
 	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: [][]models.InlineKeyboardButton{
 			{

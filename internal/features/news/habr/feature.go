@@ -39,6 +39,7 @@ func (f *Feature) Init(ctx context.Context) error {
 }
 
 func (f *Feature) Brief(ctx context.Context) (string, error) {
+	// TODO: Добавить ссылки на статьи
 	if f.handler == nil {
 		return "", nil
 	}

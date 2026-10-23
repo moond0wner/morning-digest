@@ -3,6 +3,7 @@ package invest
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
@@ -49,7 +50,7 @@ func newClient(ctx context.Context, logger *core_logger.Logger) (*client, error)
 	}, nil
 }
 
-func (c *client) getPortfolio() (*investgo.PortfolioResponse, error) {
+func (c *client) getPortfolio() (*Portfolio, error) {
 	response, err := c.operationsService.GetPortfolio(
 		c.accountID,
 		investapi.PortfolioRequest_RUB,
@@ -61,7 +62,33 @@ func (c *client) getPortfolio() (*investgo.PortfolioResponse, error) {
 			"get portfolio",
 		)
 	}
-	return response, nil
+	return convertToPortfolio(response), nil
+}
+
+func convertToPortfolio(resp *investgo.PortfolioResponse) *Portfolio {
+	p := &Portfolio{
+		TotalAmount:   resp.GetTotalAmountPortfolio().ToFloat(),
+		ExpectedYield: resp.GetExpectedYield().ToFloat(),
+		DailyYield:    resp.GetDailyYield().ToFloat(),
+	}
+
+	for _, pos := range resp.GetPositions() {
+		if pos.Ticker == rubTicker { // денежный остаток - не нужен
+			continue
+		}
+
+		p.Positions = append(p.Positions, Position{
+			Ticker:        pos.GetTicker(),
+			Quantity:      pos.GetQuantity().ToFloat(),
+			CurrentPrice:  pos.GetCurrentPrice().ToFloat(),
+			ExpectedYield: pos.GetExpectedYield().ToFloat(),
+		})
+	}
+	sort.Slice(p.Positions, func(i, j int) bool {
+		return p.Positions[i].CurrentPrice*p.Positions[i].Quantity >
+			p.Positions[j].CurrentPrice*p.Positions[j].Quantity
+	})
+	return p
 }
 
 func (c *client) close() error {

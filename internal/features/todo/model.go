@@ -31,6 +31,7 @@ func newTaskUninitialized() *Task {
 }
 
 func (t *Task) String() string {
+	// TODO: Криво, исправить
 	var sb strings.Builder
 
 	status := "❌"

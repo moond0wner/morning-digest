@@ -21,6 +21,7 @@ func newService(briefers []Briefer, log *core_logger.Logger) *service {
 }
 
 func (s *service) build(ctx context.Context) (string, error) {
+	// TODO: Добавить возможность настраивать дайджест
 	var sb strings.Builder
 	sb.WriteString("Доброе утро!\n\n")
 

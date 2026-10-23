@@ -15,6 +15,7 @@ type Weather struct {
 }
 
 func (w Weather) String() string {
+	// TODO: Сделать лучше
 	var sb strings.Builder
 
 	sb.WriteString("Погода\n\n")

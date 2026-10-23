@@ -10,30 +10,30 @@ import (
 	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 )
 
+type weatherClient interface {
+	getCoordinates(ctx context.Context, city string) ([]geoResponse, error)
+	getWeather(ctx context.Context, lat, lon float64) (*weatherResponse, error)
+}
+
 type service struct {
-	client *client
+	client weatherClient
 	log    *core_logger.Logger
 	retry  *core_retry.Retrier
 }
 
-func newService(logger *core_logger.Logger, retrier *core_retry.Retrier) (*service, error) {
-	config, err := newConfig()
-	if err != nil {
-		return nil, fmt.Errorf("load weather config: %w", err)
-	}
-
+func newService(client weatherClient, logger *core_logger.Logger, retrier *core_retry.Retrier) (*service, error) {
 	return &service{
-		client: newClient(config.apiKey),
+		client: client,
 		log:    logger,
 		retry:  retrier,
 	}, nil
 }
 
-func (s *service) GetCandidates(ctx context.Context, city string) ([]geoResponse, error) {
+func (s *service) getCandidates(ctx context.Context, city string) ([]geoResponse, error) {
 	return s.client.getCoordinates(ctx, city)
 }
 
-func (s *service) GetByCoords(ctx context.Context, lat, lon float64) (Weather, error) {
+func (s *service) getByCoords(ctx context.Context, lat, lon float64) (Weather, error) {
 	var weather Weather
 	err := s.retry.Do(ctx, func(ctx context.Context) error {
 		resp, err := s.client.getWeather(ctx, lat, lon)

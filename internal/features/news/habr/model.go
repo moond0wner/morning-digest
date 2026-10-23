@@ -35,6 +35,7 @@ type Article struct {
 }
 
 func (a *Article) String() string {
+	// TODO: Сделать лучше
 	return fmt.Sprintf(
 		"- %s\n  %s\n  %s",
 		a.Title,

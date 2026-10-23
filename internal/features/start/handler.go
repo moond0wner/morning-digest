@@ -21,6 +21,7 @@ func newHandler(log *core_logger.Logger) *handler {
 }
 
 func (h *handler) start(ctx context.Context, b *bot.Bot, update *models.Update) {
+	// TODO: Переделать текст
 	text := "Привет, я твой бот-помощник. Пока что я ничего не умею, но все впереди!"
 	chatID := update.Message.Chat.ID
 

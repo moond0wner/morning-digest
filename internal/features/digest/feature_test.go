@@ -1,5 +1,3 @@
-// internal/features/digest/feature_test.go
-
 package digest
 
 import (

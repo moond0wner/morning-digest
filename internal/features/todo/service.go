@@ -6,11 +6,20 @@ import (
 	"time"
 )
 
-type service struct {
-	repository *repository
+type taskRepository interface {
+	createTask(ctx context.Context, task *Task) error
+	getTasks(ctx context.Context) ([]Task, error)
+	getTask(ctx context.Context, taskID int64) (Task, error)
+	updateTask(ctx context.Context, task Task) error
+	createTable(ctx context.Context) error
+	Close() error
 }
 
-func newService(repository *repository) *service {
+type service struct {
+	repository taskRepository
+}
+
+func newService(repository taskRepository) *service {
 	return &service{
 		repository: repository,
 	}
