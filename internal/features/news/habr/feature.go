@@ -2,6 +2,7 @@ package habr
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
@@ -39,7 +40,6 @@ func (f *Feature) Init(ctx context.Context) error {
 }
 
 func (f *Feature) Brief(ctx context.Context) (string, error) {
-	// TODO: Добавить ссылки на статьи
 	if f.handler == nil {
 		return "", nil
 	}
@@ -54,9 +54,9 @@ func (f *Feature) Brief(ctx context.Context) (string, error) {
 	}
 
 	var sb strings.Builder
-	sb.WriteString("📰 Хабр:\n")
-	for _, a := range articles {
-		sb.WriteString("• " + a.Title + "\n")
+	sb.WriteString("📃 Хабр:\n")
+	for _, article := range articles {
+		fmt.Fprintln(&sb, article.String())
 	}
 	return strings.TrimSpace(sb.String()), nil
 }

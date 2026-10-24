@@ -34,15 +34,24 @@ func (r *repository) createTable(ctx context.Context) error {
 
 func (r *repository) createTask(ctx context.Context, task *Task) error {
 	sqlQuery := `
-	INSERT INTO tasks (title, description, completed, created_at) 
-	VALUES (?, ?, 0, ?);
+	INSERT INTO tasks (title, description, completed, created_at, completed_at) 
+	VALUES (?, ?, ?, ?, ?);
 	`
+
+	var completedAtStr *string
+	if task.CompletedAt != nil {
+		s := task.CompletedAt.Format(time.RFC3339)
+		completedAtStr = &s
+	}
+
 	_, err := r.Exec(
 		ctx,
 		sqlQuery,
 		task.Title,
 		task.Description,
-		task.CreatedAt.Format(time.RFC3339),
+		task.Completed,
+		task.CreatedAt.Format(time.RFC3339), // <-- Вот тут передаем строку времени, а не 0
+		completedAtStr,
 	)
 	if err != nil {
 		return core_errors.Wrap(
@@ -64,7 +73,7 @@ func (r *repository) getTasks(ctx context.Context) ([]Task, error) {
 	err := r.Query(ctx, sqlQuery, nil, func(rows *sql.Rows) error {
 		for rows.Next() {
 			var (
-				completedAtNull sql.NullTime
+				completedAtNull sql.NullString
 				createdAtStr    string
 				t               Task
 				err             error
@@ -83,7 +92,10 @@ func (r *repository) getTasks(ctx context.Context) ([]Task, error) {
 				return err
 			}
 			if completedAtNull.Valid {
-				t.CompletedAt = &completedAtNull.Time
+				parsedTime, err := time.Parse(time.RFC3339, completedAtNull.String)
+				if err == nil {
+					t.CompletedAt = &parsedTime
+				}
 			}
 			tasks = append(tasks, t)
 		}
@@ -106,7 +118,7 @@ func (r *repository) getTask(ctx context.Context, taskID int64) (Task, error) {
 	var (
 		t               Task
 		createdAtStr    string
-		completedAtNull sql.NullTime
+		completedAtNull sql.NullString
 		scanErr         error
 	)
 
@@ -133,12 +145,14 @@ func (r *repository) getTask(ctx context.Context, taskID int64) (Task, error) {
 		return Task{}, core_errors.Wrap(core_errors.ErrInternal, err, "parse created_at")
 	}
 	if completedAtNull.Valid {
-		t.CompletedAt = &completedAtNull.Time
+		parsedTime, err := time.Parse(time.RFC3339, completedAtNull.String)
+		if err == nil {
+			t.CompletedAt = &parsedTime
+		}
 	}
 
 	return t, nil
 }
-
 func (r *repository) updateTask(ctx context.Context, task Task) error {
 	sqlQuery := `
 	UPDATE tasks
@@ -150,13 +164,19 @@ func (r *repository) updateTask(ctx context.Context, task Task) error {
 	WHERE id = ?;
 	`
 
+	var completedAtStr *string
+	if task.CompletedAt != nil {
+		s := task.CompletedAt.Format(time.RFC3339)
+		completedAtStr = &s
+	}
+
 	_, err := r.Exec(
 		ctx,
 		sqlQuery,
 		task.Title,
 		task.Description,
 		task.Completed,
-		task.CompletedAt,
+		completedAtStr,
 		task.ID,
 	)
 

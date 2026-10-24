@@ -31,8 +31,9 @@ func (h *handler) handleDigest(ctx context.Context, b *bot.Bot, update *models.U
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatID,
-		Text:   text,
+		ChatID:    chatID,
+		Text:      text,
+		ParseMode: models.ParseModeHTML,
 	})
 }
 
