@@ -26,6 +26,7 @@ jobs:
             git pull origin main
             docker builder prune -f --filter until=168h
             make env-up
+            make db-wait
             make migrate-up
             make deploy
             docker image prune -f
