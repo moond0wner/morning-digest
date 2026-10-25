@@ -10,6 +10,14 @@ env-up:
 env-down: 
 	@docker compose down postgres 
 
+db-wait:
+	@echo "Ожидание готовности базы данных..."
+	@until docker compose exec -T postgres pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do \
+		echo "База еще не готова, ждем 1 сек..."; \
+		sleep 1; \
+	done;
+	@echo "✅ База готова к работе!"
+
 
 env-port-forward:
 	@docker compose up -d port-forwarder
