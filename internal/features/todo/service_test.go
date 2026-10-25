@@ -12,9 +12,6 @@ type mockRepository struct {
 
 func (m *mockRepository) createTask(ctx context.Context, task *Task) error { return nil }
 func (m *mockRepository) getTasks(ctx context.Context) ([]Task, error)     { return nil, nil }
-func (m *mockRepository) createTable(ctx context.Context) error            { return nil }
-func (m *mockRepository) Close() error                                     { return nil }
-
 func (m *mockRepository) getTask(ctx context.Context, taskID int64) (Task, error) {
 	return m.tasks[taskID], nil
 }

@@ -20,23 +20,39 @@ type Position struct {
 }
 
 func (p *Portfolio) String() string {
-	// TODO: Сделать лучше
 	var sb strings.Builder
-	sb.WriteString("Портфель\n\n")
+
+	yieldEmoji := "🟢"
+	if p.ExpectedYield < 0 {
+		yieldEmoji = "🔴"
+	}
+
+	dailyEmoji := "📈"
+	if p.DailyYield < 0 {
+		dailyEmoji = "📉"
+	}
+
+	sb.WriteString("💼 Портфель\n\n")
 	fmt.Fprintf(&sb, "Стоимость: %.0f ₽\n", p.TotalAmount)
-	fmt.Fprintf(&sb, "Доходность: %+.3f ₽\n", p.ExpectedYield)
-	fmt.Fprintf(&sb, "За день: %+.2f ₽\n\n", p.DailyYield)
+	fmt.Fprintf(&sb, "%s Доходность: %+.0f ₽\n", yieldEmoji, p.ExpectedYield)
+	fmt.Fprintf(&sb, "%s За день: %+.0f ₽\n\n", dailyEmoji, p.DailyYield)
 
 	if len(p.Positions) == 0 {
-		sb.WriteString("Нет открытых позиций\n")
+		sb.WriteString("_Нет открытых позиций_ 🕳")
+		return sb.String()
 	}
 
 	for _, pos := range p.Positions {
+		posEmoji := "🟩"
+		if pos.ExpectedYield < 0 {
+			posEmoji = "🟥"
+		}
+
 		fmt.Fprintf(
 			&sb,
-			"• %s — %.0f шт, %.2f ₽, %+.0f ₽\n",
-			pos.Ticker, pos.Quantity, pos.CurrentPrice, pos.ExpectedYield,
+			"%s %s\n   %.0f шт × %.2f ₽ = %+.0f ₽\n",
+			posEmoji, pos.Ticker, pos.Quantity, pos.CurrentPrice, pos.ExpectedYield,
 		)
 	}
-	return sb.String()
+	return strings.TrimSpace(sb.String())
 }

@@ -34,7 +34,7 @@ func generateTaskKeyboard(tasks []Task) *models.InlineKeyboardMarkup {
 		if !task.Completed {
 			keyboard.InlineKeyboard = append(keyboard.InlineKeyboard,
 				[]models.InlineKeyboardButton{
-					{Text: task.String(), CallbackData: fmt.Sprintf("%s%d", cbCompleteTask, task.ID)},
+					{Text: task.Title, CallbackData: fmt.Sprintf("%s%d", cbCompleteTask, task.ID)},
 				},
 			)
 		}

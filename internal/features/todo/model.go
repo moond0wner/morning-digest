@@ -31,18 +31,21 @@ func newTaskUninitialized() *Task {
 }
 
 func (t *Task) String() string {
-	// TODO: Криво, исправить
 	var sb strings.Builder
 
-	status := "❌"
+	status := "🔴"
 	if t.Completed {
-		status = "✅"
+		status = "🟢"
 	}
 
-	sb.WriteString(fmt.Sprintf("№%d - '%s': %s %s", t.ID, t.Title, t.Description, status))
+	fmt.Fprintf(&sb, "%s %s", status, t.Title)
 
-	if t.CompletedAt != nil {
-		sb.WriteString(fmt.Sprintf("\n✅ завершено %s\n", t.CompletedAt.Format("02 Jan 15:04")))
+	if t.Description != "" {
+		fmt.Fprintf(&sb, "\n   └ %s", t.Description)
+	}
+
+	if t.Completed && t.CompletedAt != nil {
+		fmt.Fprintf(&sb, "\n   ⏱ Выполнено: %s", t.CompletedAt.Format("02 Jan 15:04"))
 	}
 
 	return sb.String()

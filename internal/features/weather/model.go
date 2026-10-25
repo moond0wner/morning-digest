@@ -15,16 +15,14 @@ type Weather struct {
 }
 
 func (w Weather) String() string {
-	// TODO: Сделать лучше
 	var sb strings.Builder
 
-	sb.WriteString("Погода\n\n")
-	fmt.Fprintf(&sb, "Город: %s\n", w.City)
-	fmt.Fprintf(&sb, "Описание: %s\n", w.Description)
-	fmt.Fprintf(&sb, "Температура: %.1f °C\n", w.Temp)
-	fmt.Fprintf(&sb, "Ощущается как: %.1f °C\n", w.FeelsLike)
-	fmt.Fprintf(&sb, "Влажность: %d%%\n", w.Humidity)
-	fmt.Fprintf(&sb, "Скорость ветра: %.2f м/с\n", w.WindSpeed)
+	sb.WriteString("🌤 Погода\n\n")
+	fmt.Fprintf(&sb, "📍 %s\n", w.City)
+	fmt.Fprintf(&sb, "🌡  %.0f °C (ощущается как %.0f °C)\n", w.Temp, w.FeelsLike)
+	fmt.Fprintf(&sb, "💨 Ветер: %.1f м/с\n", w.WindSpeed)
+	fmt.Fprintf(&sb, "💧 Влажность: %d%%\n", w.Humidity)
+	fmt.Fprintf(&sb, "☁️ %s\n", w.Description)
 
 	return sb.String()
 }

@@ -11,8 +11,6 @@ type taskRepository interface {
 	getTasks(ctx context.Context) ([]Task, error)
 	getTask(ctx context.Context, taskID int64) (Task, error)
 	updateTask(ctx context.Context, task Task) error
-	createTable(ctx context.Context) error
-	Close() error
 }
 
 type service struct {
@@ -23,10 +21,6 @@ func newService(repository taskRepository) *service {
 	return &service{
 		repository: repository,
 	}
-}
-
-func (s *service) close() error {
-	return s.repository.Close()
 }
 
 func (s *service) createTask(ctx context.Context, task *Task) error {

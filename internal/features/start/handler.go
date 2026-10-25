@@ -21,8 +21,12 @@ func newHandler(log *core_logger.Logger) *handler {
 }
 
 func (h *handler) start(ctx context.Context, b *bot.Bot, update *models.Update) {
-	// TODO: Переделать текст
-	text := "Привет, я твой бот-помощник. Пока что я ничего не умею, но все впереди!"
+	text := `Привет, я твой бот-помощник. 
+Вот что я умею:
+- /weather <город> - погода
+- /invest - портфель
+- /news - статьи с хабр
+- /todo - задачи`
 	chatID := update.Message.Chat.ID
 
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{

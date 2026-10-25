@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"go.uber.org/zap"
 )
 
@@ -75,8 +76,9 @@ func (h *handler) sendArticles(
 		fmt.Fprintln(&sb, article.String())
 	}
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatID,
-		Text:   sb.String(),
+		ChatID:    chatID,
+		Text:      sb.String(),
+		ParseMode: models.ParseModeHTML,
 	})
 
 	if err != nil {

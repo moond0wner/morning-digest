@@ -35,11 +35,11 @@ type Article struct {
 }
 
 func (a *Article) String() string {
-	// TODO: Сделать лучше
+	cleanLink := strings.Split(a.Link, "?")[0]
 	return fmt.Sprintf(
-		"- %s\n  %s\n  %s",
+		"📰 <a href=\"%s\">%s</a>\n   🕒 %s",
+		cleanLink,
 		a.Title,
-		strings.Split(a.Link, "?")[0],
-		a.Date.Format("02 Jan, 2006 15:04"),
+		a.Date.Format("02 Jan, 15:04"),
 	)
 }

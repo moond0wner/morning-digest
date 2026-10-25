@@ -6,29 +6,29 @@ import (
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
-	core_repository "github.com/moond0wner/morning-digest/internal/core/repository"
+	core_pgx_pool "github.com/moond0wner/morning-digest/internal/core/repository/postgres/pool/pgx"
 	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
 )
 
 type Feature struct {
 	*core_feature.BaseFeature
-	handler  *handler
-	baseRepo *core_repository.BaseRepository
+	handler *handler
+	pool    *core_pgx_pool.Pool
 }
 
-func NewFeature(logger *core_logger.Logger, baseRepo *core_repository.BaseRepository) *Feature {
+func NewFeature(logger *core_logger.Logger, pgx_pool *core_pgx_pool.Pool) *Feature {
 	return &Feature{
 		BaseFeature: core_feature.NewBaseFeature("todo", logger, nil),
-		baseRepo:    baseRepo,
+		pool:        pgx_pool,
 	}
 }
 
 func (f *Feature) Init(ctx context.Context) error {
-	repo := newRepository(f.baseRepo)
+	repo := newRepository(f.pool)
 	service := newService(repo)
 	f.handler = newHandler(f.Log, service)
 
-	err := f.handler.service.repository.createTable(ctx)
+	_, err := f.handler.service.repository.getTasks(ctx)
 	return err
 }
 
@@ -38,13 +38,6 @@ func (f *Feature) Handle() []core_telegram.Handle {
 	}
 
 	return f.handler.handle()
-}
-
-func (f *Feature) Close(ctx context.Context) error {
-	if f.handler == nil || f.handler.service == nil {
-		return nil
-	}
-	return f.handler.service.close()
 }
 
 func (f *Feature) Brief(ctx context.Context) (string, error) {

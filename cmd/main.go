@@ -12,7 +12,7 @@ import (
 	core_config "github.com/moond0wner/morning-digest/internal/core/config"
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
-	core_repository "github.com/moond0wner/morning-digest/internal/core/repository"
+	core_pgx_pool "github.com/moond0wner/morning-digest/internal/core/repository/postgres/pool/pgx"
 	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 	core_scheduler "github.com/moond0wner/morning-digest/internal/core/scheduler"
 	core_telegram "github.com/moond0wner/morning-digest/internal/core/telegram"
@@ -28,7 +28,7 @@ import (
 
 func main() {
 	cfg := core_config.NewConfigMust()
-	time.Local = cfg.Timezone
+	time.Local = cfg.Init.Timezone
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -42,7 +42,17 @@ func main() {
 	}
 	logger.Debug("application time zone", zap.Any("zone", time.Local))
 
-	retrier := core_retry.NewRetrier(cfg.RetryAttempts, cfg.RetryDelay.Std(), cfg.RetryBackoff.Std(), logger)
+	logger.Debug("initializing postgres connection pool")
+	pool, err := core_pgx_pool.NewPool(
+		ctx,
+		core_pgx_pool.NewConfigMust(),
+	)
+	if err != nil {
+		logger.Fatal("failed to init postgres connection pool", zap.Error(err))
+	}
+	defer pool.Close()
+
+	retrier := core_retry.NewRetrier(cfg.Retry.Attempts, cfg.Retry.Delay.Std(), cfg.Retry.Backoff.Std(), logger)
 
 	bot, err := core_telegram.NewBot(ctx, logger, retrier)
 	if err != nil {
@@ -52,18 +62,12 @@ func main() {
 
 	sender := core_telegram.NewMessageSender(bot.Bot)
 
-	todoBaseRepo, err := core_repository.NewBaseRepository("todo")
-	if err != nil {
-		logger.Error("create repository", zap.Error(err))
-		os.Exit(1)
-	}
-
 	features := []core_feature.Feature{
 		start.NewFeature(logger),
 		weather.NewFeature(logger, retrier),
 		invest.NewFeature(logger, retrier),
 		habr.NewFeature(logger, retrier),
-		todo.NewFeature(logger, todoBaseRepo),
+		todo.NewFeature(logger, pool),
 	}
 
 	var briefers []digest.Briefer
@@ -73,7 +77,14 @@ func main() {
 		}
 	}
 
-	scheduler := core_scheduler.NewSchedueler(time.Local, 6, 0)
+	scheduler := core_scheduler.NewSchedueler(
+		time.Local,
+		cfg.Scheduler.Hour,
+		cfg.Scheduler.Minute,
+	)
+
+	logger.Debug("scheduler time", zap.Int("hour", cfg.Scheduler.Hour), zap.Int("minute", cfg.Scheduler.Minute))
+
 	digestCfg := digest.Config{
 		AccountID: cfg.AccountID,
 	}

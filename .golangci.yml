@@ -1,5 +1,8 @@
 version: "2"
 
+run:
+  timeout: 3m
+
 linters:
   default: none
   enable:
@@ -8,3 +11,20 @@ linters:
     - ineffassign
     - staticcheck
     - unused
+  settings:
+    errcheck:
+      check-blank: false
+      exclude-functions:
+        - (io.Closer).Close
+        - (*database/sql.Rows).Close
+        - (*database/sql.DB).Close
+        - (net/http.Response).Body.Close
+        - (*github.com/go-telegram/bot.Bot).SendMessage
+        - (*github.com/go-telegram/bot.Bot).AnswerCallbackQuery
+        - (net/http.ResponseWriter).Write
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck

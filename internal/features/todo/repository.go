@@ -2,47 +2,41 @@ package todo
 
 import (
 	"context"
-	"database/sql"
 	"errors"
-	"time"
+	"fmt"
 
 	core_errors "github.com/moond0wner/morning-digest/internal/core/errors"
-	core_repository "github.com/moond0wner/morning-digest/internal/core/repository"
+	core_postgres_pool "github.com/moond0wner/morning-digest/internal/core/repository/postgres/pool"
+	core_pgx_pool "github.com/moond0wner/morning-digest/internal/core/repository/postgres/pool/pgx"
 )
 
 type repository struct {
-	*core_repository.BaseRepository
+	pool *core_pgx_pool.Pool
 }
 
-func newRepository(base *core_repository.BaseRepository) *repository {
-	return &repository{BaseRepository: base}
-}
-
-func (r *repository) createTable(ctx context.Context) error {
-	sqlQuery := `
-    CREATE TABLE IF NOT EXISTS tasks (
-        id           INTEGER 	PRIMARY KEY AUTOINCREMENT,
-        title        TEXT 		NOT NULL,
-        description  TEXT,
-        completed    INTEGER 	NOT NULL DEFAULT 0,
-        created_at   TEXT 		NOT NULL,
-        completed_at TEXT
-    );`
-	_, err := r.Exec(ctx, sqlQuery)
-	return err
+func newRepository(pool *core_pgx_pool.Pool) *repository {
+	return &repository{
+		pool: pool,
+	}
 }
 
 func (r *repository) createTask(ctx context.Context, task *Task) error {
+	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	defer cancel()
+
 	sqlQuery := `
-	INSERT INTO tasks (title, description, completed, created_at) 
-	VALUES (?, ?, 0, ?);
+	INSERT INTO tasks (title, description, completed, created_at, completed_at) 
+	VALUES ($1, $2, $3, $4, $5);
 	`
-	_, err := r.Exec(
+
+	_, err := r.pool.Exec(
 		ctx,
 		sqlQuery,
 		task.Title,
 		task.Description,
-		task.CreatedAt.Format(time.RFC3339),
+		task.Completed,
+		task.CreatedAt,
+		task.CompletedAt,
 	)
 	if err != nil {
 		return core_errors.Wrap(
@@ -55,102 +49,109 @@ func (r *repository) createTask(ctx context.Context, task *Task) error {
 }
 
 func (r *repository) getTasks(ctx context.Context) ([]Task, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	defer cancel()
+
 	sqlQuery := `
 	SELECT id, title, description, completed, created_at, completed_at 
-	FROM tasks;
+	FROM tasks
+	ORDER BY id ASC;
 	`
 
-	var tasks []Task
-	err := r.Query(ctx, sqlQuery, nil, func(rows *sql.Rows) error {
-		for rows.Next() {
-			var (
-				completedAtNull sql.NullTime
-				createdAtStr    string
-				t               Task
-				err             error
-			)
-			if err = rows.Scan(
-				&t.ID,
-				&t.Title,
-				&t.Description,
-				&t.Completed,
-				&createdAtStr,
-				&completedAtNull,
-			); err != nil {
-				return err
-			}
-			if t.CreatedAt, err = time.Parse(time.RFC3339, createdAtStr); err != nil {
-				return err
-			}
-			if completedAtNull.Valid {
-				t.CompletedAt = &completedAtNull.Time
-			}
-			tasks = append(tasks, t)
-		}
-		return rows.Err()
-	})
-
+	rows, err := r.pool.Query(ctx, sqlQuery)
 	if err != nil {
-		return nil, core_errors.Wrap(core_errors.ErrInternal, err, "query tasks")
+		return nil, core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"query error",
+		)
 	}
+
+	defer rows.Close()
+
+	var tasks []Task
+	for rows.Next() {
+		var task Task
+		if err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.Description,
+			&task.Completed,
+			&task.CreatedAt,
+			&task.CompletedAt,
+		); err != nil {
+			return nil, core_errors.Wrap(
+				core_errors.ErrInternal,
+				err,
+				"scan error",
+			)
+		}
+		tasks = append(tasks, task)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"next rows",
+		)
+	}
+
 	return tasks, nil
 }
 
 func (r *repository) getTask(ctx context.Context, taskID int64) (Task, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	defer cancel()
+
 	sqlQuery := `
     SELECT id, title, description, completed, created_at, completed_at
     FROM tasks
-    WHERE id = ?;
+    WHERE id=$1;
     `
 
-	var (
-		t               Task
-		createdAtStr    string
-		completedAtNull sql.NullTime
-		scanErr         error
-	)
+	row := r.pool.QueryRow(ctx, sqlQuery, taskID)
 
-	err := r.QueryRow(ctx, sqlQuery, []any{taskID}, func(row *sql.Row) error {
-		scanErr = row.Scan(
-			&t.ID,
-			&t.Title,
-			&t.Description,
-			&t.Completed,
-			&createdAtStr,
-			&completedAtNull,
-		)
-		return scanErr
-	})
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return Task{}, core_errors.Wrap(core_errors.ErrNotFound, err, "task not found")
+	var task Task
+	if err := row.Scan(
+		&task.ID,
+		&task.Title,
+		&task.Description,
+		&task.Completed,
+		&task.CreatedAt,
+		&task.CompletedAt,
+	); err != nil {
+		if errors.Is(err, core_postgres_pool.ErrNoRows) {
+			return Task{}, core_errors.Wrap(
+				core_errors.ErrNotFound,
+				err,
+				fmt.Sprintf("task with id='%d' not found", taskID),
+			)
 		}
-		return Task{}, core_errors.Wrap(core_errors.ErrInternal, err, "scan error")
+		return Task{}, core_errors.Wrap(
+			core_errors.ErrInternal,
+			err,
+			"scan error",
+		)
 	}
 
-	if t.CreatedAt, err = time.Parse(time.RFC3339, createdAtStr); err != nil {
-		return Task{}, core_errors.Wrap(core_errors.ErrInternal, err, "parse created_at")
-	}
-	if completedAtNull.Valid {
-		t.CompletedAt = &completedAtNull.Time
-	}
+	return task, nil
 
-	return t, nil
 }
-
 func (r *repository) updateTask(ctx context.Context, task Task) error {
+	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	defer cancel()
+
 	sqlQuery := `
 	UPDATE tasks
 	SET 
-		title = ?, 
-		description = ?, 
-		completed = ?, 
-		completed_at = ?
-	WHERE id = ?;
+		title=$1,
+		description=$2, 
+		completed=$3,
+		completed_at=$4
+	WHERE id=$5;
 	`
 
-	_, err := r.Exec(
+	_, err := r.pool.Exec(
 		ctx,
 		sqlQuery,
 		task.Title,
@@ -164,7 +165,7 @@ func (r *repository) updateTask(ctx context.Context, task Task) error {
 		return core_errors.Wrap(
 			core_errors.ErrInternal,
 			err,
-			"database exec",
+			"exec error",
 		)
 	}
 
