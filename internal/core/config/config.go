@@ -9,7 +9,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Описываем вложенные структуры
 type InitConfig struct {
 	Timeout     Duration       `yaml:"timeout"`
 	TimezoneStr string         `yaml:"timezone"`
@@ -27,7 +26,6 @@ type SchedulerConfig struct {
 	Minute int `yaml:"minute"`
 }
 
-// Главная структура
 type Config struct {
 	Init      InitConfig      `yaml:"init"`
 	Retry     RetryConfig     `yaml:"retry"`
