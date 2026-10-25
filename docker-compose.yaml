@@ -10,9 +10,40 @@ services:
       - INVEST_TOKEN=${INVEST_TOKEN}
       - INVEST_ACCOUNT_ID=${INVEST_ACCOUNT_ID}
       - TELEGRAM_ACCOUNT_ID=${TELEGRAM_ACCOUNT_ID}
+      - POSTGRES_HOST=postgres # postgres - название соседнего докер образа, к нему можно подключаться по названию, так как они все в одной сети
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_TIMEOUT=${POSTGRES_TIMEOUT}
       - LOGGER_LEVEL=${LOGGER_LEVEL}
       - LOGGER_FOLDER=/app/out/logs
     volumes:
       - ${PROJECT_ROOT}/out/logs:/app/out/logs
       - ${PROJECT_ROOT}/out/logs:/app/out/data
     restart: always
+  postgres:
+    image: postgres:18.1-bookworm
+    container_name: env-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_TIMEOUT=${POSTGRES_TIMEOUT}
+    volumes:
+      - ${PROJECT_ROOT}/out/pgdata:/var/lib/postgresql
+    restart: always
+  postgres-migrate:
+    image: migrate/migrate:v4.19.1
+    volumes:
+      - ${PROJECT_ROOT}/migrations:/migrations
+  port-forwarder:
+    image: alpine/socat:1.8.0.3
+    container_name: env-port-forwarder
+    entrypoint: |
+      /bin/sh -c "
+        socat -d -d tcp-listen:5432,fork,reuseaddr tcp-connect:postgres:5432 &
+        wait
+      "
+    ports:
+      - "127.0.0.1:5432:5432"
+

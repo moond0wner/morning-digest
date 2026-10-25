@@ -9,15 +9,29 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Описываем вложенные структуры
+type InitConfig struct {
+	Timeout     Duration       `yaml:"timeout"`
+	TimezoneStr string         `yaml:"timezone"`
+	Timezone    *time.Location `yaml:"-"`
+}
+
+type RetryConfig struct {
+	Delay    Duration `yaml:"delay"`
+	Attempts int      `yaml:"attempts"`
+	Backoff  Duration `yaml:"backoff"`
+}
+
+type SchedulerConfig struct {
+	Hour   int `yaml:"hour"`
+	Minute int `yaml:"minute"`
+}
+
+// Главная структура
 type Config struct {
-	RetryDelay    Duration `yaml:"retry_delay"`
-	RetryBackoff  Duration `yaml:"retry_backoff"`
-	RetryAttempts int      `yaml:"retry_attempts"`
-	InitTimeout   Duration `yaml:"init_timeout"`
-
-	TimezoneStr string `yaml:"timezone"`
-
-	Timezone *time.Location `yaml:"-"`
+	Init      InitConfig      `yaml:"init"`
+	Retry     RetryConfig     `yaml:"retry"`
+	Scheduler SchedulerConfig `yaml:"scheduler"`
 
 	AccountID int64
 }
@@ -25,47 +39,28 @@ type Config struct {
 func newConfig() (*Config, error) {
 	yamlConfig, err := os.ReadFile("config.yaml")
 	if err != nil {
-		return nil, core_errors.Wrap(
-			core_errors.ErrInternal,
-			err,
-			"read yaml config",
-		)
+		return nil, core_errors.Wrap(core_errors.ErrInternal, err, "read yaml config")
 	}
 
 	var config *Config
 	if err := yaml.Unmarshal(yamlConfig, &config); err != nil {
-		return nil, core_errors.Wrap(
-			core_errors.ErrInternal,
-			err,
-			"yaml unmarshal",
-		)
+		return nil, core_errors.Wrap(core_errors.ErrInternal, err, "yaml unmarshal")
 	}
 
-	loc, err := time.LoadLocation(config.TimezoneStr)
+	loc, err := time.LoadLocation(config.Init.TimezoneStr)
 	if err != nil {
-		return nil, core_errors.Wrap(
-			core_errors.ErrInternal,
-			err,
-			"load timezone",
-		)
+		return nil, core_errors.Wrap(core_errors.ErrInternal, err, "load timezone")
 	}
-	config.Timezone = loc
+	config.Init.Timezone = loc
 
 	tgIDStr := os.Getenv("TELEGRAM_ACCOUNT_ID")
 	if tgIDStr == "" {
-		return nil, core_errors.New(
-			core_errors.ErrInternal,
-			"empty TELEGRAM_ACCOUNT_ID",
-		)
+		return nil, core_errors.New(core_errors.ErrInternal, "empty TELEGRAM_ACCOUNT_ID")
 	}
 
 	tgID, err := strconv.ParseInt(tgIDStr, 10, 64)
 	if err != nil {
-		return nil, core_errors.Wrap(
-			core_errors.ErrInternal,
-			err,
-			"error convertation tgID",
-		)
+		return nil, core_errors.Wrap(core_errors.ErrInternal, err, "error convertation tgID")
 	}
 
 	config.AccountID = tgID
@@ -78,6 +73,5 @@ func NewConfigMust() *Config {
 	if err != nil {
 		panic(err)
 	}
-
 	return cfg
 }
