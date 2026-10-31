@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 )
 
 type MessageSender struct {
@@ -16,8 +17,9 @@ func NewMessageSender(b *bot.Bot) *MessageSender {
 
 func (s *MessageSender) SendMessage(ctx context.Context, chatID int64, text string) error {
 	_, err := s.bot.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatID,
-		Text:   text,
+		ChatID:    chatID,
+		Text:      text,
+		ParseMode: models.ParseModeHTML,
 	})
 	return err
 }

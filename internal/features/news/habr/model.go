@@ -2,6 +2,7 @@ package habr
 
 import (
 	"fmt"
+	"html"
 	"strings"
 	"time"
 )
@@ -36,10 +37,11 @@ type Article struct {
 
 func (a *Article) String() string {
 	cleanLink := strings.Split(a.Link, "?")[0]
+	safeTitle := html.EscapeString(a.Title)
 	return fmt.Sprintf(
 		"📰 <a href=\"%s\">%s</a>\n   🕒 %s",
 		cleanLink,
-		a.Title,
+		safeTitle,
 		a.Date.Format("02 Jan, 15:04"),
 	)
 }
