@@ -61,7 +61,7 @@ migrate-down:
 
 	
 run:
-	@go run cmd/main.go
+	@go run -race cmd/main.go
 
 deploy:
 	@docker compose up -d --build tgbot

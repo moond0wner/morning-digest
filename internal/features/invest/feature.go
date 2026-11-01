@@ -32,7 +32,7 @@ func (f *Feature) Init(ctx context.Context) error {
 
 	f.handler = newHandler(f.Log, service)
 
-	_, err = f.handler.service.getPortfolio()
+	_, err = f.handler.service.getPortfolio(ctx)
 	return err
 }
 
@@ -55,7 +55,7 @@ func (f *Feature) Brief(ctx context.Context) (string, error) {
 		return "", nil
 	}
 
-	p, err := f.handler.service.getPortfolio()
+	p, err := f.handler.service.getPortfolio(ctx)
 	if err != nil {
 		return "", err
 	}

@@ -1,6 +1,7 @@
 package invest
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -17,7 +18,7 @@ type mockClient struct {
 	err       error
 }
 
-func (c *mockClient) getPortfolio() (*Portfolio, error) {
+func (c *mockClient) getPortfolio(ctx context.Context) (*Portfolio, error) {
 	return c.portfolio, c.err
 }
 
@@ -39,7 +40,7 @@ func TestService_GetPortfolio(t *testing.T) {
 			},
 		}
 		s := newService(mock, logger, retry)
-		gotPortfolio, err := s.getPortfolio()
+		gotPortfolio, err := s.getPortfolio(context.Background())
 		if err != nil {
 			t.Fatalf("getPortfolio вернул ошибку: %v", err)
 		}
@@ -58,7 +59,7 @@ func TestService_GetPortfolio(t *testing.T) {
 			),
 		}
 		s := newService(mock, logger, retry)
-		_, err := s.getPortfolio()
+		_, err := s.getPortfolio(context.Background())
 		if err == nil {
 			t.Fatal("ожидали ошибку, а получили nil")
 		}

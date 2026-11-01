@@ -25,7 +25,7 @@ func newHandler(log *core_logger.Logger, srvc *service) *handler {
 func (h *handler) invest(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
 
-	portfolio, err := h.service.getPortfolio()
+	portfolio, err := h.service.getPortfolio(ctx)
 	if err != nil {
 		h.ReplyError(ctx, b, chatID, "Не удалось собрать информацию о Вашем счете", err)
 		return

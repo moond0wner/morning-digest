@@ -1,6 +1,8 @@
 package invest
 
 import (
+	"context"
+
 	core_logger "github.com/moond0wner/morning-digest/internal/core/logger"
 	core_retry "github.com/moond0wner/morning-digest/internal/core/retry"
 )
@@ -8,7 +10,7 @@ import (
 const rubTicker = "RUB000UTSTOM"
 
 type investClient interface {
-	getPortfolio() (*Portfolio, error)
+	getPortfolio(ctx context.Context) (*Portfolio, error)
 	close() error
 }
 
@@ -30,8 +32,8 @@ func (s *service) close() error {
 	return s.client.close()
 }
 
-func (s *service) getPortfolio() (*Portfolio, error) {
-	portfolio, err := s.client.getPortfolio()
+func (s *service) getPortfolio(ctx context.Context) (*Portfolio, error) {
+	portfolio, err := s.client.getPortfolio(ctx)
 	if err != nil {
 		return nil, err
 	}

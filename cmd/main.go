@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 	_ "time/tzdata"
@@ -99,22 +100,31 @@ func main() {
 	features = append(features, digestFeature)
 	features = append(features, echo.NewFeature(logger)) // этот хендлер должен быть всегда последним в регистрации
 
+	wg := sync.WaitGroup{}
 	for _, f := range features {
-		logger.Debug("initializing feature", zap.String("feature", f.Name()))
-		if err := retrier.Do(ctx, f.Init); err != nil {
-			logger.Warn("feature disabled",
-				zap.String("feature", f.Name()),
-				zap.Error(err),
-			)
-			continue
-		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			logger.Debug("initializing feature", zap.String("feature", f.Name()))
+			if err := retrier.Do(ctx, f.Init); err != nil {
+				logger.Warn("feature disabled", zap.String("feature", f.Name()), zap.Error(err))
+				return
+			}
+		}()
+	}
+	wg.Wait()
+
+	for _, f := range features {
 		bot.Register(f.Handle()...)
 		logger.Debug("feature registered", zap.String("feature", f.Name()))
 	}
 
 	defer func() {
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer shutdownCancel()
+
 		for i := len(features) - 1; i >= 0; i-- {
-			if err := features[i].Close(ctx); err != nil {
+			if err := features[i].Close(shutdownCtx); err != nil {
 				logger.Warn("feature close", zap.String("feature", features[i].Name()), zap.Error(err))
 			}
 			logger.Debug("feature is closed", zap.String("feature", features[i].Name()))

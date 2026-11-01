@@ -50,19 +50,38 @@ func newClient(ctx context.Context, logger *core_logger.Logger) (*client, error)
 	}, nil
 }
 
-func (c *client) getPortfolio() (*Portfolio, error) {
-	response, err := c.operationsService.GetPortfolio(
-		c.accountID,
-		investapi.PortfolioRequest_RUB,
-	)
-	if err != nil {
+func (c *client) getPortfolio(ctx context.Context) (*Portfolio, error) {
+	type result struct {
+		p   *Portfolio
+		err error
+	}
+	resCh := make(chan result, 1)
+	go func() {
+		response, err := c.operationsService.GetPortfolio(
+			c.accountID,
+			investapi.PortfolioRequest_RUB,
+		)
+		if err != nil {
+			resCh <- result{err: core_errors.Wrap(
+				core_errors.ErrExternalAPI,
+				err,
+				"get portfolio",
+			)}
+			return
+		}
+		resCh <- result{p: convertToPortfolio(response)}
+	}()
+	select {
+	case <-ctx.Done():
 		return nil, core_errors.Wrap(
 			core_errors.ErrExternalAPI,
-			err,
-			"get portfolio",
+			ctx.Err(),
+			"get portfolio timeout",
 		)
+	case res := <-resCh:
+		return res.p, res.err
 	}
-	return convertToPortfolio(response), nil
+
 }
 
 func convertToPortfolio(resp *investgo.PortfolioResponse) *Portfolio {
