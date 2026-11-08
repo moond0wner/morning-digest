@@ -60,5 +60,5 @@ func (f *Feature) Brief(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("💼 Портфель: %.0f ₽ (за день %+.0f ₽)", p.TotalAmount, p.DailyYield), nil
+	return fmt.Sprintf("💼 Портфель: %.1f ₽ (за день %+.1f ₽)", p.TotalAmount, p.DailyYield), nil
 }

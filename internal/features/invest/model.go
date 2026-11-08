@@ -34,8 +34,8 @@ func (p *Portfolio) String() string {
 
 	sb.WriteString("💼 Портфель\n\n")
 	fmt.Fprintf(&sb, "Стоимость: %.0f ₽\n", p.TotalAmount)
-	fmt.Fprintf(&sb, "%s Доходность: %+.0f ₽\n", yieldEmoji, p.ExpectedYield)
-	fmt.Fprintf(&sb, "%s За день: %+.0f ₽\n\n", dailyEmoji, p.DailyYield)
+	fmt.Fprintf(&sb, "%s Общая прибыль: %+.2f ₽\n", yieldEmoji, p.ExpectedYield)
+	fmt.Fprintf(&sb, "%s За день: %+.2f ₽\n\n", dailyEmoji, p.DailyYield)
 
 	if len(p.Positions) == 0 {
 		sb.WriteString("_Нет открытых позиций_ 🕳")
@@ -47,11 +47,12 @@ func (p *Portfolio) String() string {
 		if pos.ExpectedYield < 0 {
 			posEmoji = "🟥"
 		}
+		totalPositionAmount := pos.Quantity * pos.CurrentPrice
 
 		fmt.Fprintf(
 			&sb,
-			"%s %s\n   %.0f шт × %.2f ₽ = %+.0f ₽\n",
-			posEmoji, pos.Ticker, pos.Quantity, pos.CurrentPrice, pos.ExpectedYield,
+			"%s %s: %.0f ₽ (%+.0f ₽)\n",
+			posEmoji, pos.Ticker, totalPositionAmount, pos.ExpectedYield,
 		)
 	}
 	return strings.TrimSpace(sb.String())
