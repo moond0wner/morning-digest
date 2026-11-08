@@ -11,8 +11,8 @@ import (
 )
 
 type service struct {
-	briefers []Briefer
 	log      *core_logger.Logger
+	briefers []Briefer
 }
 
 func newService(briefers []Briefer, log *core_logger.Logger) *service {

@@ -11,10 +11,10 @@ import (
 )
 
 type Retrier struct {
-	attempts   int
 	delay      time.Duration
 	maxBackoff time.Duration
 	log        *core_logger.Logger
+	attempts   int
 }
 
 func NewRetrier(attempts int, delay, maxBackoff time.Duration, log *core_logger.Logger) *Retrier {

@@ -7,10 +7,10 @@ import (
 )
 
 type Handle struct {
-	HandleType bot.HandlerType
-	Pattern    string
-	MatchType  bot.MatchType
-	Function   bot.HandlerFunc
 	Middleware []core_telegram_middleware.Middleware
 	MatchFunc  func(*models.Update) bool
+	Pattern    string
+	HandleType bot.HandlerType
+	MatchType  bot.MatchType
+	Function   bot.HandlerFunc
 }

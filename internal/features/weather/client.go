@@ -17,16 +17,16 @@ const (
 )
 
 type client struct {
-	apiKey         string
 	http           *http.Client
+	apiKey         string
 	geoBaseURL     string
 	weatherBaseURL string
 }
 
 func newClient(apiKey, geoURL, weatherURL string) *client {
 	return &client{
-		apiKey:         apiKey,
 		http:           &http.Client{Timeout: 10 * time.Second},
+		apiKey:         apiKey,
 		geoBaseURL:     geoURL,
 		weatherBaseURL: weatherURL,
 	}

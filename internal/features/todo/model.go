@@ -14,19 +14,19 @@ type Task struct {
 	ID          int64
 	Title       string
 	Description string
-	Completed   bool
 	CreatedAt   time.Time
 	CompletedAt *time.Time
+	Completed   bool
 }
 
 func newTaskUninitialized() *Task {
 	return &Task{
-		uninitializedID,
-		"",
-		"",
-		false,
-		time.Now(),
-		nil,
+		ID:          uninitializedID,
+		Title:       "",
+		Description: "",
+		CreatedAt:   time.Now(),
+		CompletedAt: nil,
+		Completed:   false,
 	}
 }
 

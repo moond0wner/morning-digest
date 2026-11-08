@@ -2,6 +2,7 @@ package todo
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	core_feature "github.com/moond0wner/morning-digest/internal/core/feature"
@@ -53,7 +54,7 @@ func (f *Feature) Brief(ctx context.Context) (string, error) {
 		if t.Completed {
 			continue
 		}
-		sb.WriteString("• " + t.Title + "\n")
+		sb.WriteString(fmt.Sprintf("• %s\n", t.Title))
 		count++
 		if count >= 5 {
 			break

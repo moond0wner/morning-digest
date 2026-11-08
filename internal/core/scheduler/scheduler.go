@@ -7,9 +7,9 @@ import (
 
 type Scheduler struct {
 	loc            *time.Location
+	tickerDuration time.Duration
 	targetHour     int
 	targetMinute   int
-	tickerDuration time.Duration
 }
 
 func NewSchedueler(loc *time.Location, targetHour, targetMinute int) *Scheduler {

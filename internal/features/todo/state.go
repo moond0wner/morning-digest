@@ -11,8 +11,8 @@ const (
 )
 
 type taskDialogState struct {
-	Step step
 	Task *Task
+	Step step
 }
 
 func (h *handler) getState(userID int64) (*taskDialogState, bool) {

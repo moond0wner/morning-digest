@@ -15,9 +15,9 @@ type Feature interface {
 }
 
 type BaseFeature struct {
-	name    string
 	handles []core_telegram.Handle
 	Log     *core_logger.Logger
+	name    string
 }
 
 func NewBaseFeature(name string, logger *core_logger.Logger, handles []core_telegram.Handle) *BaseFeature {
